@@ -10,7 +10,7 @@ extern uint8_t BigFont[];
 
 UTFT myGLCD(A1,A2,A0,A3,A5,ITDB32S); //myGLCD(RS,WR,CS,RST,ALE,mode);
 UTouch  myTouch(13,10,11,12,A4); //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
-TFT_Extension myTFT(&myGLCD, &myTouch, LANDSCAPE);
+TFT_Extension myTFT(&myGLCD, &myTouch);
 
 int XC,YC,X = random(3,316),Y = random(3,236),BallX = 5,BallY = 2,oldX,oldY;
 int BallRadius = 3, Balls = 3, lastball = -1; // Changed
@@ -29,6 +29,7 @@ void setup()
   myGLCD.setFont(SmallFont);
   myTouch.InitTouch(LANDSCAPE);
   myTouch.setPrecision(PREC_LOW);
+  myTFT.ExtSetup();
   myGLCD.fillScr(BLACK);
   myGLCD.drawLine(0,12, 319 , 12);
   myGLCD.print("Balls Remaining:",0,0);
@@ -169,12 +170,12 @@ void GameOverScreen()
   myGLCD.setColor(GREEN);
   myGLCD.print("Play Again?", CENTER, 111);
   makeButton();
-  if(myTFT.TextButton("Yes", Big, 80, 139, 145, 169, myTFT.ConvertRGB(YELLOW)))
+  if(myTFT.TextButton("Yes", Big, 80, 139, 145, 169, YELLOW))
   {
     Balls = 3;
     setup();
   }
-  else if(myTFT.TextButton("No", Big, 170, 139, 235, 169, myTFT.ConvertRGB(RED)))
+  else if(myTFT.TextButton("No", Big, 170, 139, 235, 169, RED))
   {
     myGLCD.fillScr(BLACK);
     myGLCD.setColor(BLUE);

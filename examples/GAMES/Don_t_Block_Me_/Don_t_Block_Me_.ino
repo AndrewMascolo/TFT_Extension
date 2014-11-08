@@ -12,7 +12,7 @@ extern uint8_t BigFont[];
 UTFT myGLCD(ITDB32S, A1,A2,A0,A3,A5);
 //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
 UTouch  myTouch(13,10,11,12,A4);
-TFT_Extension myTFT(&myGLCD, &myTouch, Orientation);
+TFT_Extension myTFT(&myGLCD, &myTouch);
 
 int Y,X,YDIR = 0,XDIR = 0, score= 0;
 
@@ -35,6 +35,7 @@ void setup()
   myGLCD.setFont(BigFont);
   myTouch.InitTouch(Orientation);
   myTouch.setPrecision(PREC_LOW);
+  myTFT.ExtSetup();
   myGLCD.fillScr(BLACK);
   myGLCD.setColor(255,255,255);
 
@@ -56,10 +57,10 @@ void setup()
   myTFT.fillTriangle(120,180,40,left);//left
   myTFT.fillTriangle(200,180,40,right);//right
 #endif
-  myTFT.SetTouchButtonColors(0, myTFT.ConvertRGB(GREEN), myTFT.ConvertRGB(GREEN), FILL, ROUNDED);
-  myTFT.SetTouchButtonColors(1, myTFT.ConvertRGB(RED), myTFT.ConvertRGB(RED), FILL, ROUNDED);
-  myTFT.SetTouchButtonText(0, "YES", Big, myTFT.ConvertRGB(BLACK));
-  myTFT.SetTouchButtonText(1, "NO", Big, myTFT.ConvertRGB(BLACK));
+  myTFT.SetTouchButtonColors(0, GREEN, GREEN, FILL, ROUNDED);
+  myTFT.SetTouchButtonColors(1, RED, RED, FILL, ROUNDED);
+  myTFT.SetTouchButtonText(0, "YES", Big, BLACK);
+  myTFT.SetTouchButtonText(1, "NO", Big, BLACK);
   clearGrid();
   score = 0;
   YDIR = 0; 

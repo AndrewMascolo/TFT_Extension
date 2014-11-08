@@ -3,6 +3,9 @@
 #include "TFT_Extension.h"
 #include <avr/pgmspace.h>
 
+#define Save_MainColor 		do{ FrontColor = _Disp->getColor(); BackColor = _Disp->getBackColor(); }while(0)
+#define Restore_MainColor	do{ _Disp->setColor(FrontColor); _Disp->setBackColor(BackColor); }while(0)
+
 word TFT_Extension::ConvertRGB(byte R, byte G, byte B){ 
   return ( ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3) );
 }
@@ -119,16 +122,13 @@ struct {
   int y2;
 }SEND,BSP,CAPS, SPACE, NUM;
 
-TFT_Extension ::TFT_Extension( UTFT *Disp, UTouch *Touch, bool Orient)
+TFT_Extension::TFT_Extension(UTFT *Disp, UTouch *Touch)
 { 
  _Disp = Disp;
  _Touch = Touch;
- _Orient = Orient;
- DisplaySize(320, 240);
- Setup();
 } 
 
-void TFT_Extension::Setup()
+void TFT_Extension::ExtSetup()
 {
   B_current_time = 0, C_current_time = 0, T_current_time = 0;
   B_Touched = false, B_timeout = false;
@@ -155,21 +155,24 @@ void TFT_Extension::Setup()
     VBG[idx].Slide = 0; HBG[idx].Slide = 0;
     gauge[idx].locked = 0;
   }
+  
+  DisplaySize(); 
 }
 // Set the display size if the display is anything other than 320x240 
-void TFT_Extension::DisplaySize(int X, int Y) 
+void TFT_Extension::DisplaySize() 
 {
-  if(_Orient == PORTRAIT)
-   swap(int, X,Y);
-  DispX = X; // Global variable will be set to X
-  DispY = Y; // ------------------------------ Y
+  DispX = _Disp->disp_x_size; // Global variable will be set to X
+  DispY = _Disp->disp_y_size; // ------------------------------ Y
+  
+  if(_Disp->orient == LANDSCAPE)
+  swap(int, DispX, DispY);
 }
  
 // This tells the compiler how many buttons and groups will be made.
 int TFT_Extension::TotalRadioButtons(uint8_t *num, uint8_t group) 
 { 
   TotalRB_Group = group; // Set global variable
-  for(int temp = 0; temp < group; temp++) 
+  for(byte temp = 0; temp < group; temp++) 
   {
     Block.number[temp] = num[temp]; // This stores the number of buttons per group
   }
@@ -178,6 +181,8 @@ int TFT_Extension::TotalRadioButtons(uint8_t *num, uint8_t group)
  
 bool TFT_Extension::RadioButton(int x1, int y1, int x2, int y2, uint8_t buttonNumber, uint8_t group)
 {
+    Save_MainColor;
+	
     int strl = strlen(Block.Text[buttonNumber][group]);
     int Xpos = (x2 + x1)/2; // find the center of the button
     int Ypos = (y2 + y1)/2; // -----------------------------
@@ -232,7 +237,7 @@ bool TFT_Extension::RadioButton(int x1, int y1, int x2, int y2, uint8_t buttonNu
     
 	if( TouchButton(x1,y1,x2,y2) ) // this checks to see if the buttons coords were touched
 	{
-		for(int cnt = 0; cnt < Block.number[group]; cnt++) // cycle through the buttons in that group
+		for(byte cnt = 0; cnt < Block.number[group]; cnt++) // cycle through the buttons in that group
 		{ 
 		  if(cnt == buttonNumber) // if the cycled button is the requested button, set it true
 		  {
@@ -282,6 +287,8 @@ bool TFT_Extension::RadioButton(int x1, int y1, int x2, int y2, uint8_t buttonNu
 	}
   Block.lastButton[group][buttonNumber] = Block.Button[group][buttonNumber]; // record the buttons states
   
+  Restore_MainColor;
+  
   return Block.Button[group][buttonNumber];
 }
 
@@ -289,7 +296,7 @@ bool TFT_Extension::RadioButton(int x1, int y1, int x2, int y2, uint8_t buttonNu
 int TFT_Extension::TotalRadioCircleButtons(uint8_t *num, uint8_t group) 
 { 
   TotalRCB_Group = group;
-  for(int temp = 0; temp < group; temp++)
+  for(byte temp = 0; temp < group; temp++)
   {
     Circle.number[temp] = num[temp];
   }
@@ -299,6 +306,8 @@ int TFT_Extension::TotalRadioCircleButtons(uint8_t *num, uint8_t group)
 // See the comments from RadioButton 
 bool TFT_Extension::RadioCircleButton(int cx, int cy, int radius, uint8_t buttonNumber, uint8_t group)
 {	
+    Save_MainColor;
+	
     int strl = strlen(Circle.Text[buttonNumber][group]);
 	
 	if(Cirlocked[group] != Circle.number[group] && !CirLOCK)
@@ -344,7 +353,7 @@ bool TFT_Extension::RadioCircleButton(int cx, int cy, int radius, uint8_t button
 
 	if(TouchCircle(cx,cy,radius))
 	{
-		for(int cnt = 0; cnt < Circle.number[group]; cnt++)
+		for(byte cnt = 0; cnt < Circle.number[group]; cnt++)
 		{ 
 		  if(cnt == buttonNumber)
           {		  
@@ -391,6 +400,8 @@ bool TFT_Extension::RadioCircleButton(int cx, int cy, int radius, uint8_t button
 	}
 	Circle.lastButton[group][buttonNumber] = Circle.Button[group][buttonNumber];
 	
+	Restore_MainColor;
+	
 	return Circle.Button[group][buttonNumber];
 }
 
@@ -398,7 +409,7 @@ bool TFT_Extension::RadioCircleButton(int cx, int cy, int radius, uint8_t button
 void TFT_Extension::ResetRadioCircleButton(uint8_t group) 
 {
  CirLOCK = false; // This sets the lockout variable to be false, indicating it can repaint the buttons
-  for(int temp = 0; temp < group; temp++)
+  for(byte temp = 0; temp < group; temp++)
   {
     Cirlocked[temp] = false; // Do the same for all the buttons in the group
   }
@@ -408,7 +419,7 @@ void TFT_Extension::ResetRadioCircleButton(uint8_t group)
 void TFT_Extension::ResetRadioButton(uint8_t group) 
 {
   ButLOCK = false; // This sets the lockout variable to be false, indicating it can repaint the buttons
-  for(int temp = 0; temp < group; temp++)
+  for(byte temp = 0; temp < group; temp++)
   {
 	Butlocked[temp] = false;// Do the same for all the buttons in the group
   }
@@ -429,7 +440,7 @@ bool TFT_Extension::TouchButton(int x1, int y1, int x2, int y2)
  if (y1 > y2)
   swap(int ,y1 ,y2);
  
- if(xc >= x1 && xc<= x2 && yc >= y1 && yc <= y2) return true; // If the buttons coords are touched, return true.
+ if((xc >= x1) && (xc <= x2) && (yc >= y1) && (yc <= y2)) return true; // If the buttons coords are touched, return true.
  return false; // button coords were not touched, return false.
 }
 
@@ -457,7 +468,7 @@ bool TFT_Extension::TouchButton_Draw(int x1, int y1, int x2, int y2, uint8_t but
    else 
       _Disp->setColor(ButtonColor2[buttonNumber].buttons.rgb);
 	  
-   if(_Orient == PORTRAIT)
+   if(_Disp->orient == PORTRAIT)
    {
      swap(int, x1,x2);
      swap(int, y1,y2);
@@ -593,7 +604,7 @@ bool TFT_Extension::LatchButton_Draw( int x1, int y1, int x2, int y2, uint8_t bu
        _Disp->setColor(ButtonColor1[buttonNumber].latches.rgb);
     else 
        _Disp->setColor(ButtonColor2[buttonNumber].latches.rgb);
-    if (_Orient == PORTRAIT)
+    if (_Disp->orient == PORTRAIT)
 	{
 	  swap(int, x1,x2);
 	  swap(int, y1,y2);
@@ -833,7 +844,7 @@ float TFT_Extension::Area(int Ax, int Ay, int Bx, int By, int Cx, int Cy)
  
 bool TFT_Extension ::TouchTriangle(int x1,int y1,int base, int deg)
 {
-  if (_Orient == PORTRAIT) 
+  if (_Disp->orient == PORTRAIT) 
     swap(int ,x1 ,y1);
 	
    _Touch->read();
@@ -1117,7 +1128,7 @@ uint8_t TFT_Extension::VertSlider(int x1, int y1, int x2, int y2, byte _ID, word
   {
     _Disp->setColor(color);
     _Disp->drawRect(x1, y1, x2, y2);
-    _Disp->setColor(ConvertRGB(BLACK));
+    _Disp->setColor(BLACK);
     _Disp->fillRect(x1 + 1, y1+1, x2 - 1, y2);
     VSliders[_ID].lastC = y1+1;
     VSliders[_ID].locked = true;
@@ -1130,7 +1141,7 @@ uint8_t TFT_Extension::VertSlider(int x1, int y1, int x2, int y2, byte _ID, word
   {
     if(YC > VSliders[_ID].lastC)
     {
-      _Disp->setColor(ConvertRGB(BLACK));
+      _Disp->setColor(BLACK);
       for(VSliders[_ID].Slide = y1+1; VSliders[_ID].Slide < (YC-1); VSliders[_ID].Slide++)
         _Disp->drawLine(x1+1,VSliders[_ID].Slide, x2-1, VSliders[_ID].Slide);
       VSliders[_ID].lastC = YC;
@@ -1152,7 +1163,7 @@ uint8_t TFT_Extension::HorSlider(int x1, int y1, int x2, int y2, byte _ID, word 
   {
     _Disp->setColor(color);
     _Disp->drawRect(x1, y1, x2, y2);
-    _Disp->setColor(ConvertRGB(BLACK));
+    _Disp->setColor(BLACK);
     _Disp->fillRect(x1 + 1, y1+1, x2 - 1, y2);
     HSliders[_ID].lastC = x1+1;
     HSliders[_ID].locked = true;
@@ -1168,7 +1179,7 @@ uint8_t TFT_Extension::HorSlider(int x1, int y1, int x2, int y2, byte _ID, word 
       if(direction)
 	  _Disp->setColor(color);
 	else
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
 	  
       for(HSliders[_ID].Slide = x1+1; HSliders[_ID].Slide < (XC-1); HSliders[_ID].Slide++)
         _Disp->drawLine(HSliders[_ID].Slide, y1+1,HSliders[_ID].Slide, y2);
@@ -1177,7 +1188,7 @@ uint8_t TFT_Extension::HorSlider(int x1, int y1, int x2, int y2, byte _ID, word 
     else
     {
       if(direction)
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
 	else
 	  _Disp->setColor(color);
 	  
@@ -1198,7 +1209,7 @@ void TFT_Extension::VertBarGraph(int x1, int y1, int x2, int y2, int value, int 
 	{
 		_Disp->setColor(color);
 		_Disp->drawRect(x1, y1, x2, y2);
-		_Disp->setColor(ConvertRGB(BLACK));
+		_Disp->setColor(BLACK);
 		_Disp->fillRect(x1 + 1, y1+1, x2 - 1, y2);
 		VBG[_ID].lastC = y1+1;
 		VBG[_ID].locked = true;
@@ -1207,7 +1218,7 @@ void TFT_Extension::VertBarGraph(int x1, int y1, int x2, int y2, int value, int 
 
 	if(YC > VBG[_ID].lastC)
 	{
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
 	  for(VBG[_ID].Slide = y1+1; VBG[_ID].Slide < (YC-1); VBG[_ID].Slide++)
 		_Disp->drawLine(x1+1,VBG[_ID].Slide, x2-1, VBG[_ID].Slide);
 	  VBG[_ID].lastC = YC;
@@ -1228,7 +1239,7 @@ void TFT_Extension::HorBarGraph(int x1, int y1, int x2, int y2, int value, int l
   {
     _Disp->setColor(color);
     _Disp->drawRect(x1, y1, x2, y2);
-    _Disp->setColor(ConvertRGB(BLACK));
+    _Disp->setColor(BLACK);
     _Disp->fillRect(x1 + 1, y1+1, x2 - 1, y2);
     HBG[_ID].lastC = x1+1;
     HBG[_ID].locked = true;
@@ -1244,7 +1255,7 @@ void TFT_Extension::HorBarGraph(int x1, int y1, int x2, int y2, int value, int l
     if(direction)
 	  _Disp->setColor(color);
 	else
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
 	  
 	for(HBG[_ID].Slide = x1+1; HBG[_ID].Slide < (XC-1); HBG[_ID].Slide++)
 		_Disp->drawLine(HBG[_ID].Slide, y1+1,HBG[_ID].Slide, y2);
@@ -1253,7 +1264,7 @@ void TFT_Extension::HorBarGraph(int x1, int y1, int x2, int y2, int value, int l
   else
   {
     if(direction)
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
 	else
 	  _Disp->setColor(color);
 	
@@ -1572,14 +1583,47 @@ void TFT_Extension::ResetLatchButton(byte ID)
   L_Button.lastButton[ID] = !L_Button.Button[ID];
 }
 
+void TFT_Extension::ResetLatchButtonState(byte ID, byte State)
+{
+  L[ID].buttons = State;
+}
+
+void TFT_Extension::ResetAllLatchButtonState(byte State)
+{
+  for(byte ID = 0; ID < Num_Of_Buttons; ID++)
+    L[ID].buttons = State;
+}
+
 void TFT_Extension::ResetLatchCircle(byte ID)
 {
   L_Circle.lastButton[ID] = !L_Circle.Button[ID];
 }
 
+void TFT_Extension::ResetLatchCircleState(byte ID, byte State)
+{
+  L[ID].circles = State;
+}
+
+void TFT_Extension::ResetAllLatchCircleState(byte State)
+{
+  for(byte ID = 0; ID < Num_Of_Buttons; ID++)
+    L[ID].circles = State;
+}
+
 void TFT_Extension::ResetLatchTriangle(byte ID)
 {
   L_Triangle.lastButton[ID] = !L_Triangle.Button[ID];
+}
+
+void TFT_Extension::ResetLatchTriangleState(byte ID, byte State)
+{
+  L[ID].triangles = State;
+}
+
+void TFT_Extension::ResetAllLatchTriangleState(byte State)
+{
+  for(byte ID = 0; ID < Num_Of_Buttons; ID++)
+    L[ID].triangles = State;
 }
 
 void TFT_Extension::ResetAllLatchButton()
@@ -1787,7 +1831,7 @@ void TFT_Extension::Triangle(int x1, int y1,int x2,int y2,int x3,int y3)
   _Disp->drawLine(x3,y3,x1,y1);// / lean right
 }
  
-void TFT_Extension::drawTriangle(int x1,int y1, int base, int deg)
+void TFT_Extension::drawTriangle(int x1, int y1, int base, int deg)
 {  
   int rad = base/2; int dir;
 
@@ -2126,7 +2170,7 @@ void TFT_Extension::smiley_Face(int cx, int cy, int radius, byte eyes, byte mout
   int XI,YI,XI2;
   _Disp->setColor(YELLOW);
   _Disp->fillCircle(cx,cy,radius);
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   _Disp->drawCircle(cx,cy,radius);
 
   switch(eyes)
@@ -2149,13 +2193,13 @@ void TFT_Extension::smiley_Face(int cx, int cy, int radius, byte eyes, byte mout
     break;
 
   case 2: // over joyed
-    drawArc(cx - radius/3, cy - radius/3, radius/5, radius/25, 0, 180, ConvertRGB(BLACK)); 
-    drawArc(cx + radius/3, cy - radius/3, radius/5, radius/25, 0, 180, ConvertRGB(BLACK));
+    drawArc(cx - radius/3, cy - radius/3, radius/5, radius/25, 0, 180, BLACK); 
+    drawArc(cx + radius/3, cy - radius/3, radius/5, radius/25, 0, 180, BLACK);
     break;
 
   case 3: // content
-    drawArc(cx - (radius/3), cy - (radius/3), radius/5, radius/25, 180, 360, ConvertRGB(BLACK));
-    drawArc(cx + (radius/3), cy - (radius/3), radius/5, radius/25, 180, 360, ConvertRGB(BLACK));
+    drawArc(cx - (radius/3), cy - (radius/3), radius/5, radius/25, 180, 360, BLACK);
+    drawArc(cx + (radius/3), cy - (radius/3), radius/5, radius/25, 180, 360, BLACK);
     break;
 
   case 4: // angry
@@ -2164,20 +2208,20 @@ void TFT_Extension::smiley_Face(int cx, int cy, int radius, byte eyes, byte mout
     break;
 
   case 5://very angry
-      drawArc(cx - radius/3, cy - radius/3, radius/6, 0, 135, 305, ConvertRGB(BLACK), true);
-      drawArc(cx + radius/3, cy - radius/3, radius/6, 0, 240, 395, ConvertRGB(BLACK), true);
+      drawArc(cx - radius/3, cy - radius/3, radius/6, 0, 135, 305, BLACK, true);
+      drawArc(cx + radius/3, cy - radius/3, radius/6, 0, 240, 395, BLACK, true);
     break;
 
   case 6: // big eyes
-    drawArc(cx - radius/3, cy - radius/3, radius/6, radius/25, 0, 360, ConvertRGB(BLACK));
-    drawArc(cx + radius/3, cy - radius/3, radius/6, radius/25, 0, 360, ConvertRGB(BLACK));
+    drawArc(cx - radius/3, cy - radius/3, radius/6, radius/25, 0, 360, BLACK);
+    drawArc(cx + radius/3, cy - radius/3, radius/6, radius/25, 0, 360, BLACK);
     break;
 
   case 7:
-    _Disp->setColor(ConvertRGB(WHITE));
+    _Disp->setColor(WHITE);
     _Disp->fillCircle(cx - radius/4, cy - radius/3, radius/5);
     _Disp->fillCircle(cx + radius/4, cy - radius/3, radius/5);
-    _Disp->setColor(ConvertRGB(BLACK));
+    _Disp->setColor(BLACK);
     _Disp->drawCircle(cx - radius/4, cy - radius/3, radius/5);
     _Disp->drawCircle(cx + radius/4, cy - radius/3, radius/5);
     _Disp->drawPixel(cx - radius/4, cy - radius/3);
@@ -2192,55 +2236,55 @@ void TFT_Extension::smiley_Face(int cx, int cy, int radius, byte eyes, byte mout
     break;
 
   case 9:
-    drawArc(cx - radius/3, cy - radius/3, radius/5, radius/5, 180, 361, ConvertRGB(BLACK));
-    drawArc(cx + radius/3, cy - radius/3, radius/5, radius/5, 180, 361, ConvertRGB(BLACK)); 
+    drawArc(cx - radius/3, cy - radius/3, radius/5, radius/5, 180, 361, BLACK);
+    drawArc(cx + radius/3, cy - radius/3, radius/5, radius/5, 180, 361, BLACK); 
     break;
   }
 
   switch(mouth)
   {
   case 0:
-    drawArc(cx,cy, int(float(radius)/1.6), radius/25, 180, 360, ConvertRGB(BLACK)); // big happy smile
+    drawArc(cx,cy, int(float(radius)/1.6), radius/25, 180, 360,  BLACK); // big happy smile
     break;
 
   case 1:
-    drawArc(cx,cy, int(float(radius)/1.6), radius/25, 210, 330, ConvertRGB(BLACK)); // happy smile
+    drawArc(cx,cy, int(float(radius)/1.6), radius/25, 210, 330,  BLACK); // happy smile
     break;
 
   case 2:
-    drawArc(cx,cy + radius/1.5 , radius/2, radius/25, 30, 150, ConvertRGB(BLACK)); // frown
+    drawArc(cx,cy + radius/1.5 , radius/2, radius/25, 30, 150,  BLACK); // frown
     break;
 
   case 3: // big open smile
-    drawArc(cx,cy, int(float(radius)/1.6), int(float(radius)/1.6), 181, 360, ConvertRGB(WHITE));
+    drawArc(cx,cy, int(float(radius)/1.6), int(float(radius)/1.6), 181, 360,  WHITE);
     for(byte i = 0; i <= radius/25; i++)
     {
-      drawArc(cx,cy, int(float(radius)/1.6), i, 181, 360, ConvertRGB(BLACK), true);
+      drawArc(cx,cy, int(float(radius)/1.6), i, 181, 360,  BLACK, true);
       //_Disp->drawLine(cx - radius/1.8, cy+i, cx + radius/1.8, cy+i);
     }
     break;
 
   case 4:
-    drawArc(cx,cy + radius , radius/2, radius/25, 60, 120, ConvertRGB(BLACK)); //big frown
+    drawArc(cx,cy + radius , radius/2, radius/25, 60, 120,  BLACK); //big frown
     break;
 
   case 5:
-    drawArc(cx,cy + radius/1.5 , radius/2, radius/25, 0, 180, ConvertRGB(BLACK)); // bigger frown
+    drawArc(cx,cy + radius/1.5 , radius/2, radius/25, 0, 180,  BLACK); // bigger frown
     break;
 
   case 6:
-    drawArc(cx,cy + radius/1.5 , radius/2, radius/3, 70, 110, ConvertRGB(BLACK)); // shocked open mouth
+    drawArc(cx,cy + radius/1.5 , radius/2, radius/3, 70, 110,  BLACK); // shocked open mouth
     break;
 
   case 7:
-    drawArc(cx,cy + radius , radius/1.2, radius/3, 50, 130, ConvertRGB(BLACK)); // crying mouth
+    drawArc(cx,cy + radius , radius/1.2, radius/3, 50, 130,  BLACK); // crying mouth
     break;
   }
 }
 
 void TFT_Extension::HourGlass(int cx, int cy, int height, int time)
 {
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   if(!locked)
   {
     rad = height;
@@ -2268,13 +2312,13 @@ void TFT_Extension::HourGlass(int cx, int cy, int height, int time)
       _Disp->setColor(LIGHT_ORANGE);
       _Disp->drawLine(Cx+2 , Cy, Cx2-2, Cy2);// bottom 
       _Disp->drawLine(cx-1,cy, cx-1,Cy);
-      _Disp->setColor(ConvertRGB(BLACK));
+      _Disp->setColor(BLACK);
       _Disp->drawLine(Cx3-2, Cy3, Cx4+2, Cy4); // top
 	}
     else
 	{
       rad--;
-      _Disp->setColor(ConvertRGB(BLACK));
+      _Disp->setColor(BLACK);
       _Disp->drawLine(Cx , Cy, Cx2, Cy2);// bottom 
       _Disp->drawLine(Cx2, Cy2, Cx4, Cy4);// left
       _Disp->drawLine(Cx3, Cy3, Cx, Cy); // right
@@ -2292,6 +2336,7 @@ void TFT_Extension::HourGlass(int cx, int cy, int height, int time)
 
 void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int deg)
 {
+  Save_MainColor;
   float start, stop;
   int x,y,xo,yo,fx,fy;
   int Lx1,Ly1,Lx2,Ly2;
@@ -2340,7 +2385,7 @@ void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int d
     _Disp->setColor(0,0,0);
     _Disp->drawPixel(x, y);
   } 
-  _Disp->setColor(ConvertRGB(WHITE)); 
+  _Disp->setColor(WHITE); 
   for(byte f= 1; f < radius*2; f++)
   {
     for(float i = 0; i < 180; i+= 1)
@@ -2351,10 +2396,10 @@ void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int d
     }
   }
   fillPoly(xo,yo, Lx2, Ly2,Lx1, Ly1);
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   _Disp->drawLine(xo,yo, Lx1, Ly1);
   _Disp->drawLine(xo,yo, Lx2, Ly2);
-  _Disp->setBackColor(ConvertRGB(WHITE));
+  _Disp->setBackColor(WHITE);
 
   _Disp->setFont(SmallFont);
   //  byte i = 0;
@@ -2386,15 +2431,16 @@ void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int d
     _Disp->print("TTL", cx - (3*4), cy - 6, 0); // TTL = Text Too Long
   //}
 //}
+  Restore_MainColor;
 }
 
 void TFT_Extension::drawGauge(byte _ID, int value, int pos_x, int pos_y, int start, int stop, int rad)
 {
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
   if(!gauge[_ID].locked)
   {
-   drawArc(pos_x, pos_y, rad, rad, start, stop, ConvertRGB(WHITE), true);
-   drawArc(pos_x, pos_y, rad, 0, start, stop, ConvertRGB(BLACK), true);
+   drawArc(pos_x, pos_y, rad, rad, start, stop,  WHITE, true);
+   drawArc(pos_x, pos_y, rad, 0, start, stop,  BLACK, true);
    gauge[_ID].oldx = pos_x; 
    gauge[_ID].oldy = pos_y;
    gauge[_ID].locked = true;
@@ -2404,15 +2450,15 @@ void TFT_Extension::drawGauge(byte _ID, int value, int pos_x, int pos_y, int sta
 
   if(gauge[_ID].x != gauge[_ID].oldx && gauge[_ID].y != gauge[_ID].oldy)
   {
-    _Disp->setColor(ConvertRGB(WHITE));
+    _Disp->setColor(WHITE);
     _Disp->drawLine(gauge[_ID].oldx, gauge[_ID].oldy, pos_x, pos_y);  
-    _Disp->setColor(ConvertRGB(BLACK));
+    _Disp->setColor(BLACK);
     _Disp->drawLine(gauge[_ID].x, gauge[_ID].y,pos_x,pos_y); // (cx, cy, calculated x, calculated y)
     gauge[_ID].oldx = gauge[_ID].x; 
     gauge[_ID].oldy = gauge[_ID].y;
     //_Disp->printNumF(value,2,CENTER,10);//used for debugging  
   }
-  _Disp->setColor(ConvertRGB(WHITE));	
+  _Disp->setColor(WHITE);	
 }
 
 void TFT_Extension::ResetGauge(byte _ID)
@@ -2422,11 +2468,11 @@ void TFT_Extension::ResetGauge(byte _ID)
 //========================KEYBOARD====================
 void TFT_Extension::SetupStandardKB()
 {
-   SetLatchButtonColors(0, ConvertRGB(GREEN), ConvertRGB(WHITE), NOFILL, NOTROUNDED);
+   SetLatchButtonColors(0,  GREEN,  WHITE, NOFILL, NOTROUNDED);
    
    RCV_locked= false;
    RCV_cnt = 0;
-	if(_Orient == LANDSCAPE)
+	if(_Disp->orient == LANDSCAPE)
 	{
 		_FONT = Small;
 		XoffSet=60;
@@ -2446,18 +2492,25 @@ void TFT_Extension::SetupStandardKB()
 		BSP.x1 = 130; BSP.y1 = 215; BSP.x2 = 170; BSP.y2 = 235;
 		CAPS.x1 = 25; CAPS.y1 = 215; CAPS.x2 = 65; CAPS.y2 = 235;
 	}
-	   
+	Save_MainColor;
+	
+	_Disp->setColor(0x0);
+	_Disp->fillRect(0,YoffSet,_Disp->getDisplayXSize() - 1, _Disp->getDisplayYSize() - 1);
+    _Disp->setColor(0xFFFF);
+    _Disp->setFont(SmallFont);	
     _Disp->print(">>",0, YoffSet-TxtoffSet);
-    makeKeyboard();
+	
+	makeKeyboard();
 	
     clearMSG();
+	Restore_MainColor; 
 }
 
 void TFT_Extension::SetupMobileKB()
 {
     RCV_locked= false;
     RCV_cnt = 0;
-	if(_Orient == LANDSCAPE)
+	if(_Disp->orient == LANDSCAPE)
 	{
 		_FONT = Big;
 		XoffSet=18;
@@ -2485,16 +2538,24 @@ void TFT_Extension::SetupMobileKB()
 		Type = 0;
 		_symbol = 0;
 	}
-    _Disp->print(">>",0, YoffSet-TxtoffSet);
-    make_Mobile_Keyboard();
+	Save_MainColor;
 	
-   clearMSG();
+	_Disp->setColor(0x0);
+	_Disp->fillRect(0,YoffSet,_Disp->getDisplayXSize() - 1, _Disp->getDisplayYSize() - 1);
+    _Disp->setColor(0xFFFF);
+    _Disp->setFont(SmallFont);	
+    _Disp->print(">>",0, YoffSet-TxtoffSet);
+	
+    make_Mobile_Keyboard();
+    clearMSG();
+	
+    Restore_MainColor;
 }
 
 void TFT_Extension::makeKeyboard()
 { 
   //SmileyFaces(false);
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
   _Disp->drawRect(XoffSet, YoffSet-1, XoffSet+ 12*16, YoffSet+(14*5)-1);
 
   for(byte row = 0; row < 5; row++)
@@ -2511,17 +2572,18 @@ void TFT_Extension::makeKeyboard()
   _Disp->print("LS", XoffSet+10, YoffSet + 14*3);
   _Disp->drawRect(SEND.x1, SEND.y1, SEND.x2, SEND.y2);
   _Disp->drawRect(BSP.x1, BSP.y1, BSP.x2, BSP.y2);
-   TextButton("CAPS",_FONT, CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2, ConvertRGB(WHITE));
+   TextButton("CAPS",_FONT, CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2,  WHITE);
 }
 
 void TFT_Extension::make_Mobile_Keyboard()
-{ 
+{  
+  Save_MainColor;
   if(_FONT == Big)
     _Disp->setFont(BigFont);
   else 
     _Disp->setFont(SmallFont);
   //SmileyFaces(false);
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
 
   for(byte row = 0; row < 3; row++)
   {
@@ -2533,9 +2595,9 @@ void TFT_Extension::make_Mobile_Keyboard()
       
     }
   }
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   _Disp->fillRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
   _Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
   _Disp->print("^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(SEND.x1, SEND.y1, SEND.x2, SEND.y2);
@@ -2546,6 +2608,8 @@ void TFT_Extension::make_Mobile_Keyboard()
   _Disp->print("SPACE", ((SPACE.x1 + SPACE.x2)/2) - (_FONT? 8:4)*5, ((SPACE.y1 + SPACE.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(NUM.x1, NUM.y1, NUM.x2, NUM.y2); //numKeys
   _Disp->print("123", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
+  
+  Restore_MainColor;
 }
 
 void TFT_Extension::makeShiftKeys()
@@ -2566,7 +2630,7 @@ void TFT_Extension::makeShiftKeys()
 
 void TFT_Extension::makeNumberKeys()
 { 
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
   
   _Disp->fillRect(50,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
@@ -2576,7 +2640,7 @@ void TFT_Extension::makeNumberKeys()
   else 
     _Disp->setFont(SmallFont);
   //SmileyFaces(false);
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
 
   for(byte row = 0; row < 3; row++)
   {
@@ -2597,7 +2661,7 @@ void TFT_Extension::makeNumberKeys()
 
 void TFT_Extension::makeSymbolKeys()
 { 
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor(BLACK);
   _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
   
   _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
@@ -2606,7 +2670,7 @@ void TFT_Extension::makeSymbolKeys()
   else 
     _Disp->setFont(SmallFont);
   //SmileyFaces(false);
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
 
   for(byte row = 0; row < 3; row++)
   {
@@ -2640,7 +2704,7 @@ void TFT_Extension::makeCapsKeys()
         _Disp->drawLine(XoffSet + 15*(col-3)+ (15* pgm_read_byte(&(KB[row][0])) + (col!=3? -3:0)), YoffSet + 14*row, XoffSet + 15*(col-3)+ (15* pgm_read_byte(&(KB[row][0])) + (col!=3? -3:0)),YoffSet + (14*row) + 14);
     }
   }
-  _Disp->setColor(ConvertRGB(WHITE));
+  _Disp->setColor(WHITE);
 }
 
 void TFT_Extension::clearMSG()
@@ -2656,7 +2720,8 @@ void TFT_Extension::clearMSG()
 
 char* TFT_Extension::Standard_KeyBoard(word color)
 {
-   _Disp->setColor(ConvertRGB(WHITE)); 
+  Save_MainColor;
+  _Disp->setColor(WHITE); 
   for(byte row = 0; row < 5; row++)
   {
     for(byte col = 3; col < 17; col++)
@@ -2667,7 +2732,7 @@ char* TFT_Extension::Standard_KeyBoard(word color)
         _Disp->drawRect(XoffSet, YoffSet + (14*3)-1, XoffSet + 30,YoffSet + (14*4)-1);
         Shift = true;
         makeShiftKeys();
-        _Disp->setColor(ConvertRGB(WHITE));
+        _Disp->setColor(WHITE);
       }
 
       if(KB[row][1] == col) break;
@@ -2685,7 +2750,7 @@ char* TFT_Extension::Standard_KeyBoard(word color)
             else
               MSG[idx] = (pgm_read_byte(&(KB[row][col])) )-('a'-'A');
             Shift = false;
-            _Disp->setColor(ConvertRGB(WHITE));
+            _Disp->setColor(WHITE);
             _Disp->drawRect(XoffSet, YoffSet + (14*3)-1, XoffSet + 30,YoffSet + (14*4)-1);
             makeKeyboard();
           }
@@ -2704,11 +2769,12 @@ char* TFT_Extension::Standard_KeyBoard(word color)
           MSG[idx] = ' ';
 
         (idx+1) < BUF? idx++: idx;
+		_Disp->setBackColor(0xFFFFFFFF);
         _Disp->print(MSG, 20, YoffSet - TxtoffSet);
       } 
     }
   }
-  if( TextButton("Send", _FONT, SEND.x1, SEND.y1, SEND.x2, SEND.y2, ConvertRGB(WHITE)))
+  if( TextButton("Send", _FONT, SEND.x1, SEND.y1, SEND.x2, SEND.y2,  WHITE))
   {
     #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
       Serial1.println(MSG);
@@ -2716,13 +2782,15 @@ char* TFT_Extension::Standard_KeyBoard(word color)
 	strncpy(RET_MSG, MSG, sizeof(MSG));
     idx = 0;  
     clearMSG();
+	_Disp->setBackColor(0xFFFFFFFF);
     _Disp->print(MSG, 20, YoffSet - TxtoffSet);
   }
-  if( TextButton("BSP", _FONT, BSP.x1, BSP.y1, BSP.x2, BSP.y2, ConvertRGB(WHITE)))
+  if( TextButton("BSP", _FONT, BSP.x1, BSP.y1, BSP.x2, BSP.y2,  WHITE))
   {
     idx < 1? 0 : idx--;
     MSG[idx] = ' ';
 	//MSG[idx] = '\0';
+	_Disp->setBackColor(0xFFFFFFFF);
     _Disp->print(MSG, 20, YoffSet - TxtoffSet);
   }
 
@@ -2749,18 +2817,19 @@ char* TFT_Extension::Standard_KeyBoard(word color)
     lastSface = Sfaces;
 	if(Sfaces == false)
 	{
-	  _Disp->setColor(ConvertRGB(WHITE));
+	  _Disp->setColor( WHITE));
 	  _Disp->print(">>",0, YoffSet-TxtoffSet);
       makeKeyboard();
 	}
   }*/
-	
+  Restore_MainColor;
   return RET_MSG;
 }
 
 char* TFT_Extension::Mobile_KeyBoard(word color)
 {
-   _Disp->setColor(ConvertRGB(WHITE)); 
+  _Disp->setColor(WHITE);
+  
   for(byte row = 0; row < 3; row++)
   {
     for(byte col = 3; col < 16; col++)
@@ -2769,15 +2838,15 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	  {
         if( TouchButton(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2))
         {
-	      _Disp->setColor(ConvertRGB(WHITE));
+	      _Disp->setColor(WHITE);
 	      _Disp->fillRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
-		  _Disp->setColor(ConvertRGB(BLACK));
-		  _Disp->setBackColor(ConvertRGB(WHITE));
+		  _Disp->setColor(BLACK);
+		  _Disp->setBackColor(WHITE);
           _Disp->print("^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
           Shift = true;
           //makeShiftKeys();
-          _Disp->setColor(ConvertRGB(WHITE));
-		  _Disp->setBackColor(ConvertRGB(BLACK));
+          _Disp->setColor(WHITE);
+		  _Disp->setBackColor(BLACK);
         }
       }
 	  else if(Type == 1)
@@ -2792,9 +2861,9 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 		  else 
 		  {
 		    _symbol = false;
-			_Disp->setColor(ConvertRGB(BLACK));
+			_Disp->setColor(BLACK);
 			_Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
-			_Disp->setColor(ConvertRGB(WHITE));
+			_Disp->setColor(WHITE);
 			_Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
 		    makeNumberKeys();
 		  }
@@ -2810,13 +2879,14 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
           { 
             MSG[idx] = (pgm_read_byte(&(Mobile_KB[row][col])) ); // show upper case
             Shift = false;
-            _Disp->setColor(ConvertRGB(WHITE));
+            _Disp->setColor(WHITE);
             make_Mobile_Keyboard();
           }
           else
             MSG[idx] = pgm_read_byte(&(Mobile_KB[row][col])) + ('a' - 'A'); // show lower case
 
           (idx+1) < BUF? idx++: idx;
+		  _Disp->setBackColor(0xFFFFFFFF);
           _Disp->print(MSG, 20, YoffSet - TxtoffSet);
         }
 	  }
@@ -2828,6 +2898,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
           {
 		    MSG[idx] = pgm_read_byte(&(Mobile_NumKeys[row][col]));
 		    (idx+1) < BUF? idx++: idx;
+			_Disp->setBackColor(0xFFFFFFFF);
             _Disp->print(MSG, 20, YoffSet - TxtoffSet);
 		  }
 		}
@@ -2837,6 +2908,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
           {
 		    MSG[idx] = pgm_read_byte(&(Mobile_SymKeys[row][col]));
 		    (idx+1) < BUF? idx++: idx;
+			_Disp->setBackColor(0xFFFFFFFF);
             _Disp->print(MSG, 20, YoffSet - TxtoffSet);
 		  }
 		}
@@ -2845,6 +2917,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
       {
 		MSG[idx] = ' ';
         (idx+1) < BUF? idx++: idx;
+		_Disp->setBackColor(0xFFFFFFFF);
         _Disp->print(MSG, 20, YoffSet - TxtoffSet);	
       }		
     }
@@ -2857,7 +2930,10 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	strncpy(RET_MSG, MSG, sizeof(MSG));
     idx = 0;  
     clearMSG();
+	_Disp->setBackColor(0xFFFFFFFF);
     _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+	
+	Restore_MainColor;
 	_Disp->setColor(color);
 	return RET_MSG;
   }
@@ -2867,6 +2943,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
     idx < 1? 0 : idx--;
     MSG[idx] = ' ';
 	//MSG[idx] = '\0';
+	_Disp->setBackColor(0xFFFFFFFF);
     _Disp->print(MSG, 20, YoffSet - TxtoffSet);
   }
   
@@ -2875,7 +2952,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
     if(_symbol == 0)
 	{
       Type = !Type;
-	  _Disp->setColor(ConvertRGB(BLACK));
+	  _Disp->setColor(BLACK);
       _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
   
       _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
@@ -2888,21 +2965,24 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	else
 	{
 	  Type = 0;
-	  _Disp->setColor(ConvertRGB(BLACK)); // ok
+	  _Disp->setColor(BLACK); // ok
 	  _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
       _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
 	  
-	  _Disp->setColor(ConvertRGB(WHITE));
+	  _Disp->setColor(WHITE);
 	  _Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
 	  make_Mobile_Keyboard();
 	  _symbol = false;
 	}
   }
+  Restore_MainColor;
   return NULL;
 }
 
 void TFT_Extension::ReceiveMsg(int X, int Y, word color)
 {
+  Save_MainColor;
+  
   #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
   if(Serial1.available() > 0)
   {
@@ -2920,6 +3000,7 @@ void TFT_Extension::ReceiveMsg(int X, int Y, word color)
     }
     else
     {
+	  Restore_MainColor;
       _Disp->setColor(color);
       _Disp->print(ReceiveMSG,X,Y);
       RCV_cnt=0;
@@ -2927,6 +3008,7 @@ void TFT_Extension::ReceiveMsg(int X, int Y, word color)
     }	
   }
   #endif
+  Restore_MainColor;
 }
 
 void TFT_Extension::clearRCVMSG()
@@ -2943,7 +3025,7 @@ void TFT_Extension::clearRCVMSG()
 void TFT_Extension::SmileyFaces(boolean draw)
 {
   byte E = 0, M = 0;
-  _Disp->setColor(ConvertRGB(BLACK));
+  _Disp->setColor( BLACK));
   smiley_Face(30,200, 10, HAPPY);
   if(draw)
   {

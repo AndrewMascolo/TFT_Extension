@@ -6,7 +6,7 @@ extern uint8_t SmallFont[];
 
 UTFT myGLCD(ITDB32S,A1,A2,A0,A3,A5); //myGLCD(RS,WR,CS,RST,ALE,mode);
 UTouch  myTouch(13,10,11,12,A4); //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
-TFT_Extension myTFT(&myGLCD, &myTouch, LANDSCAPE);
+TFT_Extension myTFT(&myGLCD, &myTouch);
 
 unsigned long myScore = 0;
 boolean state = false;
@@ -43,9 +43,9 @@ public:
     {
       for(byte i = 1; i < 10; i++)
       {
-        myTFT.drawStar(X+xx, yy, i,myTFT.ConvertRGB(RED), NOFILL);
+        myTFT.drawStar(X+xx, yy, i,RED, NOFILL);
       }
-      myTFT.drawStar(X+xx, yy, 12,myTFT.ConvertRGB(BLACK), FILL);
+      myTFT.drawStar(X+xx, yy, 12,BLACK, FILL);
       if(yy < 225)
         Score += 5;
       else
@@ -93,8 +93,10 @@ void setup()
   myGLCD.setFont(SmallFont);
   myTouch.InitTouch(LANDSCAPE);
   myTouch.setPrecision(PREC_LOW);
+  myTFT.ExtSetup();
+  
   myGLCD.fillScr(BLACK);
-  myTFT.SetTouchButtonColors(0,myTFT.ConvertRGB(GREEN), myTFT.ConvertRGB(WHITE), FILL, NOTROUNDED);
+  myTFT.SetTouchButtonColors(0,GREEN, WHITE, FILL, NOTROUNDED);
   myGLCD.setColor(GREEN);
   myGLCD.fillRect(0,220,319,239);
 
@@ -103,13 +105,6 @@ void setup()
 void loop()
 {  
   myTouch.read();
-//  digitalWrite(10, LOW);
-//  for(byte i = 0; i < 100;i++)
-//  {
-//    digitalWrite(13, HIGH);
-//    digitalWrite(13, LOW);
-//  }
-//  digitalWrite(10, HIGH);
 
   if(R < num) 
   {

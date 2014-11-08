@@ -1,5 +1,6 @@
 /*
   Library created by Andrew Mascolo : 2/18/2014
+  VERSION 1.3
   This library is an extension to Henning Karlsen's UTFT, UTouch, ITDB02_Graph16 and ITDB02_Touch.
   
   Function ideas from others:
@@ -23,20 +24,26 @@
 #include <math.h>
 
 //=====================COLOR_PALLET==========================
-#define BLACK   0,0,0
-#define LIGHT_RED	255,160,160
-#define RED     255,0,0
-#define DARK_RED    180,0,0
-#define LIGHT_ORANGE 255,234,150
-#define ORANGE  210,135,0
-#define YELLOW  255,255,0
-#define GREEN   0,255,0
-#define BLUE    0,0,255
-#define LIGHT_BLUE 160,160,255
-#define PURPLE  255,0,255
-#define CYAN    0,255,255
-#define GREY    128,128,128
-#define WHITE   255,255,255
+#define BLACK   0x0
+#define LIGHT_RED	0xFD14
+#define RED     0xF800
+#define DARK_RED    0x6000
+#define LIGHT_ORANGE 0xFF52
+#define ORANGE  0xFD00
+#define DARK_ORANGE 0xFA80
+#define LIGHT_YELLOW 0xFFF4
+#define YELLOW  0xD7E0
+#define DARK_YELLOW 0xCE40
+#define LIGHT_GREEN 0xB7F6
+#define GREEN   0x07E0
+#define DARK_GREEN 0x0320
+#define LIGHT_BLUE 0xA51F
+#define BLUE    0x001F
+#define DARK_BLUE 0x000C
+#define PURPLE  0xF81F
+#define CYAN    0x07FF
+#define GREY    0x8410
+#define WHITE   0xFFFF
 //==================END_OF_COLOR_PALLET======================
 
 //=====================TOUCH_DEFINES=========================
@@ -49,6 +56,8 @@
 #define NOFILL 0
 #define ROUNDED 1
 #define NOTROUNDED 0
+#define PRESSED 1
+#define RELEASED 0
 
 #define swap(type, A, B) {type T = A; A = B; B = T;}
 #define deg_to_rad	0.01745 + 3.1415 // 0.01745 = degrees to radians
@@ -103,6 +112,7 @@
 #define THE_HORROR 7,7
 #define CRY_BABY 8,7
 //========================================================
+
 //=======================KEYBOARD=========================
 #define BUF 27
 //========================================================
@@ -115,7 +125,8 @@
 class TFT_Extension
 {
 	public:
-				TFT_Extension(UTFT *Disp, UTouch *Touch, bool Orient);
+				TFT_Extension(UTFT *Disp, UTouch *Touch);
+		void	ExtSetup();
 		//========================TOUCH========================
 		bool    TouchButton(int x1, int y1, int x2, int y2);
 		bool    TouchButton_Draw(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
@@ -152,7 +163,7 @@ class TFT_Extension
 		//====================END_OF_TOUCH=====================
 		
 		//======================DISPLAY========================
-		void	DisplaySize(int X, int Y);
+		void	DisplaySize();
 		void	SetTouchButtonColors(uint8_t ButtonNumber, word color1,word color2, bool fill, bool rounded);
 		void	SetTouchCircleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
 		void	SetTouchTriangleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
@@ -169,8 +180,14 @@ class TFT_Extension
 		void	ResetTouchCircle(byte ID);
 		void	ResetTouchTriangle(byte ID);
 		void	ResetLatchButton(byte ID);
+		void	ResetLatchButtonState(byte ID, byte State);
+		void	ResetAllLatchButtonState(byte State);
 		void	ResetLatchCircle(byte ID);
+		void	ResetLatchCircleState(byte ID, byte State);
+		void	ResetAllLatchCircleState(byte State);
 		void	ResetLatchTriangle(byte ID);
+		void	ResetLatchTriangleState(byte ID, byte State);
+		void	ResetAllLatchTriangleState(byte State);
 		void	ResetAllTouchButton();
 		void	ResetAllTouchCircle();
 		void	ResetAllTouchTriangle();
@@ -226,7 +243,6 @@ class TFT_Extension
 		UTouch	 *_Touch;		
 		
 	private:
-	    void	Setup();
 		float   Area(int Ax, int Ay, int Bx, int By, int Cx, int Cy);
         double 	Cx,Cx1,Cx2;
         double 	Cy,Cy1,Cy2;
@@ -271,5 +287,6 @@ class TFT_Extension
 		bool    gotFirst;
 		int 	FTouchX, FTouchY, STouchX, STouchY;	
 		bool	Type, _symbol;
+		word	FrontColor, BackColor;
 };
 #endif

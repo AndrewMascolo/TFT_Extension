@@ -1,7 +1,7 @@
 #include <UTFT.h>
 #include <UTouch.h>
 #include <TFT_Extension.h>
-#include <math.h>
+
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 
@@ -10,7 +10,9 @@ UTFT myGLCD(ITDB32S,A1,A2,A0,A3,A5);
 //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
 UTouch  myTouch(13,10,11,12,A4);
 
-TFT_Extension myTFT(&myGLCD, &myTouch, LANDSCAPE);
+TFT_Extension myTFT(&myGLCD, &myTouch);
+
+#define convert(x) {myTFT.ConvertRGB(x)}
 
 void setup()
 {
@@ -18,7 +20,8 @@ void setup()
   myGLCD.clrScr();
   myGLCD.setFont(SmallFont);
   myTouch.InitTouch(LANDSCAPE);
-  myTouch.setPrecision(PREC_MEDIUM);
+  myTouch.setPrecision(PREC_LOW);
+  myTFT.ExtSetup();
   Serial1.begin(115200);
   startup();
 }
@@ -41,14 +44,14 @@ void startup()
   myGLCD.clrScr();
   myGLCD.print("Latches", CENTER, 50);
   myGLCD.print("Buttons", CENTER, 170);
-  myTFT.SetTouchCircleColors(0, myTFT.ConvertRGB(ORANGE), myTFT.ConvertRGB(PURPLE), FILL);        // ID number, Pressed Color, Released Color, FILL/NOFILL)
-  myTFT.SetTouchCircleText(0,  "Hello", Small, myTFT.ConvertRGB(BLUE));
-  myTFT.SetLatchCircleColors(1, myTFT.ConvertRGB(WHITE), myTFT.ConvertRGB(CYAN), FILL);          // ID number, Latched Color, UnLatched Color, FILL/NOFILL)
-  myTFT.SetLatchCircleText(1, "Hello", Small, myTFT.ConvertRGB(BLUE));
-  myTFT.SetTouchButtonColors(0, myTFT.ConvertRGB(RED), myTFT.ConvertRGB(RED), FILL, ROUNDED);   // ID number, Pressed Color, Released Color, FILL/NOFILL,ROUNDED/NOTROUNDED)
-  myTFT.SetTouchButtonText(0, "Hello", Small, myTFT.ConvertRGB(BLUE));
-  myTFT.SetLatchButtonColors(1, myTFT.ConvertRGB(RED), myTFT.ConvertRGB(BLACK), FILL, ROUNDED); // ID number, Latched Color, UnLatched Color, FILL/NOFILL, ROUNDED/NOTROUNDED)
-  myTFT.SetLatchButtonText(1, "Hello", Small, myTFT.ConvertRGB(YELLOW));
+  myTFT.SetTouchCircleColors(0, ORANGE,  PURPLE, FILL);        // ID number, Pressed Color, Released Color, FILL/NOFILL)
+  myTFT.SetTouchCircleText(0,  "Hello", Small,  BLUE);
+  myTFT.SetLatchCircleColors(1,  WHITE,  CYAN, FILL);          // ID number, Latched Color, UnLatched Color, FILL/NOFILL)
+  myTFT.SetLatchCircleText(1, "Hello", Small,  BLUE);
+  myTFT.SetTouchButtonColors(0,  RED,  RED, FILL, ROUNDED);   // ID number, Pressed Color, Released Color, FILL/NOFILL,ROUNDED/NOTROUNDED)
+  myTFT.SetTouchButtonText(0, "Hello", Small,  BLUE);
+  myTFT.SetLatchButtonColors(1,  RED,  BLACK, FILL, ROUNDED); // ID number, Latched Color, UnLatched Color, FILL/NOFILL, ROUNDED/NOTROUNDED)
+  myTFT.SetLatchButtonText(1, "Hello", Small,  YELLOW);
 //  myTFT.SetTouchTriangleColors(0, PURPLE, GREEN, FILL);       
 //  myTFT.SetLatchTriangleColors(1, YELLOW, BLUE, FILL);
   
@@ -57,9 +60,17 @@ void startup()
 void getButton()
 {
   myTFT.TouchCircle_Draw(55,180,50,0); // (x,y,radius, ID number)
-  myTFT.LatchCircle_Draw(265,55,50,1); // (x,y,radius, ID number)
+  if(myTFT.LatchCircle_Draw(265,55,50,1)) // (x,y,radius, ID number)
+  {
+    delay(5000);
+    myTFT.ResetLatchCircleState(1, RELEASED);
+  }
   myTFT.TouchButton_Draw(220,135,310,225,0);// (x1,y1,x2,y2, ID number)
-  myTFT.LatchButton_Draw(10,10,100,100,1);// (x1,y1,x2,y2, ID number)
+  if(myTFT.LatchButton_Draw(10,10,100,100,1))// (x1,y1,x2,y2, ID number)
+  {
+    delay(5000);
+    myTFT.ResetLatchButtonState(1, RELEASED);
+  }
   myTFT.TouchTriangle_Draw(160,140,50,down,0); //(x,y,radius, degree, ID number)
   myTFT.LatchTriangle_Draw(160,100,50,up,1); //(x,y,radius, degree, ID number) 
 }

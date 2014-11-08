@@ -1,5 +1,6 @@
 TFT_Extension	KEYWORD1
 
+ExtSetup	KEYWORD2
 TotalRadioButtons	KEYWORD2
 RadioButton	KEYWORD2
 TotalRadioCircleButtons	KEYWORD2
@@ -47,8 +48,14 @@ ResetTouchButton	KEYWORD2
 ResetTouchCircle	KEYWORD2
 ResetTouchTriangle	KEYWORD2
 ResetLatchButton	KEYWORD2
+ResetLatchButtonState	KEYWORD2
+ResetAllLatchButtonState	KEYWORD2
 ResetLatchCircle	KEYWORD2
+ResetLatchCircleState	KEYWORD2
+ResetAllLatchCircleState	KEYWORD2
 ResetLatchTriangle	KEYWORD2
+ResetLatchTriangleState	KEYWORD2
+ResetAllLatchTriangleState	KEYWORD2
 ResetAllTouchButton	KEYWORD2
 ResetAllTouchCircle	KEYWORD2
 ResetAllTouchTriangle	KEYWORD2
@@ -115,6 +122,9 @@ FILL	LITERAL1
 NOFILL	LITERAL1
 ROUNDED	LITERAL1
 NOTROUNDED	LITERAL1
+
+PRESSED	LITERAL1
+RELEASED	LITERAL1
 
 BLACK	LITERAL1
 LIGHT_RED	LITERAL1
