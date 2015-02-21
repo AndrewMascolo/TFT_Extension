@@ -1919,6 +1919,11 @@ void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,char* txt, char* npt
   ButtonColor1[ButtonNumber].buttons.text.rgb = color;
 }
 
+void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,char* txt, bool size, word color)
+{
+  SetTouchButtonText(ButtonNumber, txt, txt, size, color);
+}
+
 void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, char* nptxt, bool size, word color)
 {
   L_Button.PText[ButtonNumber] = txt;
@@ -1927,6 +1932,11 @@ void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, char* np
   L_Button.TxtEnable[ButtonNumber] = true;
   
   ButtonColor1[ButtonNumber].latches.text.rgb = color;
+}
+
+void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, bool size, word color)
+{
+  SetLatchButtonText( ButtonNumber, txt, txt, size, color);
 }
 
 void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color)
@@ -1939,6 +1949,11 @@ void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, char * n
   CircleColor1[CircleNumber].buttons.text.rgb = color;
 }
 
+void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, bool size, word color)
+{
+  SetTouchCircleText(CircleNumber, txt, txt, size, color);
+}
+
 void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color)
 {
   L_Circle.PText[CircleNumber] = txt;
@@ -1947,6 +1962,11 @@ void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, char * n
   L_Circle.TxtEnable[CircleNumber] = true;
   
   CircleColor1[CircleNumber].latches.text.rgb = color;
+}
+
+void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color)
+{
+  SetLatchCircleText(CircleNumber, txt, txt, size, color);
 }
 
 void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color)
@@ -1959,6 +1979,11 @@ void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char
   TriangleColor1[TriangleNumber].buttons.text.rgb = color;
 }
 
+void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color)
+{
+  SetTouchTriangleText(TriangleNumber, txt, txt, size, color);
+}
+
 void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char* nptxt, bool size, word color)
 {
   L_Triangle.PText[TriangleNumber] = txt;
@@ -1968,6 +1993,12 @@ void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char
   
   TriangleColor1[TriangleNumber].latches.text.rgb = color;
 }
+
+void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color)
+{
+  SetLatchTriangleText(TriangleNumber, txt, txt, size, color);
+}
+
 void TFT_Extension::ResetTouchButton(byte ID)
 {
   T_Button.lastButton[ID] = true;

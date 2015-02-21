@@ -181,6 +181,12 @@ class TFT_Extension
 		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color);
 		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
 		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetTouchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
+		void	SetLatchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
+		void	SetTouchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
+		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
+		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
+		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
 		void	ResetTouchButton(byte ID);
 		void	ResetTouchCircle(byte ID);
 		void	ResetTouchTriangle(byte ID);
