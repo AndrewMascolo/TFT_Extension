@@ -457,7 +457,7 @@ void Bluetooth_Play()
       if (myTFT.TouchButton(45 + col * 25, 50, 72 + col * 25, 195))
       {
         newRow = CheckMap(col);
-        Serial1.print(col);
+        Serial1.print(col + '0');
         PLAY = true;
         break;
       }

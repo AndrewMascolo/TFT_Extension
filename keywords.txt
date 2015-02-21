@@ -10,16 +10,19 @@ ResetRadioCircleButton	KEYWORD2
 ResetRadioButton	KEYWORD2
 TouchButton	KEYWORD2
 TouchButton_Draw	KEYWORD2
+Button	KEYWORD2
 TextButton	KEYWORD2
 LatchButton	KEYWORD2
 LatchButton_Draw	KEYWORD2
 TouchCircle	KEYWORD2
 TouchCircleByQuad	KEYWORD2
 TouchCircle_Draw	KEYWORD2
+CircleButton	KEYWORD2
 LatchCircle	KEYWORD2
 LatchCircle_Draw	KEYWORD2
 TouchTriangle	KEYWORD2
 TouchTriangle_Draw	KEYWORD2
+TriangleButton	KEYWORD2
 LatchTriangle	KEYWORD2
 LatchTriangle_Draw	KEYWORD2
 TouchDelayButton	KEYWORD2
@@ -125,6 +128,10 @@ NOTROUNDED	LITERAL1
 
 PRESSED	LITERAL1
 RELEASED	LITERAL1
+
+TOUCH	LITERAL1
+LATCH	LITERAL1
+DELAY	LITERAL1
 
 BLACK	LITERAL1
 LIGHT_RED	LITERAL1

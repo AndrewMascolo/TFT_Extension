@@ -1,6 +1,7 @@
+#include <TFT_Extension.h>
 #include <UTFT.h>
 #include <UTouch.h>
-#include <TFT_Extension.h>
+
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 
@@ -30,12 +31,6 @@ void setup()
 void loop()
 {
   //X, Y, radius, thickness, startAngle, stopAngle
-  Percent = myTFT.TouchArc(160, 120, 60, 20, 0, 180);
-  
-  myGLCD.setBackColor(WHITE);
-  myGLCD.setColor(BLACK);
-  sprintf(tmp, "%d%%  ", Percent);
-  myGLCD.print(tmp, 150, 115);
   
   
 }

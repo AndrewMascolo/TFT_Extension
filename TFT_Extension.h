@@ -1,6 +1,6 @@
 /*
   Library created by Andrew Mascolo : 2/18/2014
-  VERSION 1.3
+  VERSION 1.4
   This library is an extension to Henning Karlsen's UTFT, UTouch, ITDB02_Graph16 and ITDB02_Touch.
   
   Function ideas from others:
@@ -11,7 +11,7 @@
 	SpeechBubble   :: robtillaart
 	drawGauge      :: cyclegadget 
     HorBarGraph    :: gromgsxr 
-	VertBarGraph   :: gromgsxr 
+	VertBarGraph   :: gromgsxr
 */
 
 #ifndef TFT_Extension_h
@@ -45,7 +45,9 @@
 #define GREY    0x8410
 #define WHITE   0xFFFF
 //==================END_OF_COLOR_PALLET======================
-
+#define TOUCH 0
+#define LATCH 1
+#define DELAY 2
 //=====================TOUCH_DEFINES=========================
 #define PORTRAIT	0
 #define LANDSCAPE	1
@@ -130,15 +132,18 @@ class TFT_Extension
 		//========================TOUCH========================
 		bool    TouchButton(int x1, int y1, int x2, int y2);
 		bool    TouchButton_Draw(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
+		bool    Button(int x1, int y1, int x2, int y2, uint8_t buttonNumber, byte TYPE = 0, unsigned long time = 1000);
 		bool 	TextButton(char *str, byte font_size, int x1, int y1, int x2, int y2, word color);
 		bool    LatchButton(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
 		bool    LatchButton_Draw(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
 		bool    TouchCircle(int cx, int cy, int radius);
         bool    TouchCircle_Draw(int cx, int cy, int radius, uint8_t circleNumber);
+		bool	CircleButton(int cx, int cy, int radius, uint8_t circleNumber, byte TYPE = 0, unsigned long time = 1000);
 		bool    LatchCircle(int cx, int cy, int radius, uint8_t circleNumber);
 		bool    LatchCircle_Draw(int cx, int cy, int radius, uint8_t circleNumber);
         bool    TouchTriangle(int x1, int y1, int base, int deg);
 		bool	TouchTriangle_Draw(int x1, int y1, int base, int deg, uint8_t triangleNumber);
+		bool	TriangleButton(int x1,int y1,int base, int deg, uint8_t triangleNumber, byte TYPE = 0, unsigned long time = 1000);
 		bool	LatchTriangle(int x1, int y1, int base, int deg, uint8_t triangleNumber);
 		bool	LatchTriangle_Draw(int x1, int y1, int base, int deg, uint8_t triangleNumber);
 		bool    TouchDelayButton(int x1, int y1, int x2, int y2, unsigned long time);
@@ -170,12 +175,12 @@ class TFT_Extension
 		void	SetLatchButtonColors(uint8_t ButtonNumber, word color1,word color2, bool fill, bool rounded);
 		void	SetLatchCircleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
 		void	SetLatchTriangleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
-		void	SetTouchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
-		void	SetLatchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
-		void	SetTouchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
-		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
-		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
-		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
+		void	SetTouchButtonText(uint8_t ButtonNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetLatchButtonText(uint8_t ButtonNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetTouchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
+		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
 		void	ResetTouchButton(byte ID);
 		void	ResetTouchCircle(byte ID);
 		void	ResetTouchTriangle(byte ID);
