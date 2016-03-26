@@ -12,6 +12,28 @@
 	drawGauge      :: cyclegadget 
     HorBarGraph    :: gromgsxr 
 	VertBarGraph   :: gromgsxr
+	
+The MIT License (MIT)
+
+Copyright (c) 2016 Andrew Mascolo Jr
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 */
 
 #ifndef TFT_Extension_h
@@ -22,6 +44,18 @@
 #include <UTouch.h>
 
 #include <math.h>
+
+#ifdef UTFT_h
+#define DISPLAY UTFT
+#else
+#define DISPLAY ITDB02
+#endif
+
+#ifdef UTouch_h
+#define TOUCH UTouch
+#else
+#define TOUCH ITDB02_Touch
+#endif
 
 //=====================COLOR_PALLET==========================
 #define BLACK   0x0
@@ -61,10 +95,10 @@
 #define PRESSED 1
 #define RELEASED 0
 
-#define swap(type, A, B) {type T = A; A = B; B = T;}
+//#define swap(type, A, B) {type T = A; A = B; B = T;}
 #define deg_to_rad	0.01745 + 3.1415 // 0.01745 = degrees to radians
 #define Button_Groups 5
-#define Num_Of_Buttons 10
+#define Num_Of_Buttons 20
 //=================END_OF_TOUCH_DEFINES======================
 
 //===================DISPLAY_DEFINES=========================
@@ -187,6 +221,8 @@ class TFT_Extension
 		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
 		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
 		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
+		void	ResetVertSlider(byte _ID);
+		void	ResetHorSlider(byte _ID);
 		void	ResetTouchButton(byte ID);
 		void	ResetTouchCircle(byte ID);
 		void	ResetTouchTriangle(byte ID);
@@ -225,9 +261,10 @@ class TFT_Extension
 		void	SetAll_RCB_Toggled_Color( word color);
 		void	SetAll_RB_Untoggled_Color( word color);
 		void	SetAll_RCB_Untoggled_Color( word color);
-		void	Triangle(int x1, int y1,int x2,int y2,int x3,int y3);
+		void	drawTriangle(int x1, int y1,int x2,int y2,int x3,int y3);
         void 	drawTriangle(int x1,int y1,int base, int deg);
 		void	fillTriangle(int x1,int y1,int base, int deg);
+		void	fillTriangle(int Cx, int Cy, int Cx1, int Cy1, int Cx2, int Cy2);
 		void	Polygon(int cx, int cy, int sides, int diameter, word color, bool fill, float deg = 0);
 		void	fillPoly(int x1, int y1, int x2, int y2, int x3, int y3);
 		void	drawStar(int cx, int cy, int diameter, word color, bool fill, float factor = 2.0);
@@ -241,7 +278,7 @@ class TFT_Extension
 		void	drawGauge(byte _ID, int cur, int pos_x, int pos_y, int start, int stop, int rad);
 		void	ResetGauge(byte _ID);
 		void	SetupStandardKB();
-		void	SetupMobileKB();
+		void	SetupMobileKB(int X = 0, int Y = 0, float SX = 320, float SY = 115);
 		char* 	Standard_KeyBoard(word color);
 		char*	Mobile_KeyBoard(word color);
 		void	ReceiveMsg(int X, int Y, word color);
@@ -254,7 +291,8 @@ class TFT_Extension
 		UTouch	 *_Touch;		
 		
 	private:
-		float   Area(int Ax, int Ay, int Bx, int By, int Cx, int Cy);
+		long    Area(long Ax, long Ay, long Bx, long By, long Cx, long Cy);
+		bool	PointInTriangle(int tx, int ty, int Cx, int Cy, int Cx1, int Cy1, int Cx2, int Cy2);
         double 	Cx,Cx1,Cx2;
         double 	Cy,Cy1,Cy2;
 		int		touchX, touchY;
@@ -275,11 +313,12 @@ class TFT_Extension
 		bool	ButLOCK, CirLOCK;
 		int 	B_lastx1, B_lasty1, B_lastx2, B_lasty2;
 		int 	C_lastcx, C_lastcy;
-		byte 	XoffSet, YoffSet,TxtoffSet;
+		int 	XoffSet, YoffSet,TxtoffSet;
 		int		idx;
         char    MSG[BUF];
 		char    RET_MSG[BUF];
         bool    Shift, capsLock, lastState, Sfaces, lastSface;
+		float	KB_Scale;
 		void	makeKeyboard();
 		void	make_Mobile_Keyboard();
 		void	makeNumberKeys();
@@ -299,5 +338,6 @@ class TFT_Extension
 		int 	FTouchX, FTouchY, STouchX, STouchY;	
 		bool	Type, _symbol;
 		word	FrontColor, BackColor;
+		float 	ScaleX, ScaleY;
 };
 #endif

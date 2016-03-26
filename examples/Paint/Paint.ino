@@ -4,10 +4,10 @@
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
-UTFT myGLCD(A1,A2,A0,A3,A5,ITDB32S);
-//myTouch(TCLK,TCS,DIN,DOUT,IRQ);
-UTouch  myTouch(13,10,11,12,A4);
-TFT_Extension myTFT(&myGLCD, &myTouch, LANDSCAPE);
+
+UTFT    myGLCD(ITDB32S, 38, 39, 40, 41);
+UTouch  myTouch( 6, 5, 4, 3, 2);
+TFT_Extension myTFT(&myGLCD, &myTouch);
 
 int cx, cy,count,counter,R,G,B;
 int coordX[4];
@@ -23,7 +23,8 @@ void setup()
   myGLCD.clrScr();
   myGLCD.setFont(SmallFont);
   myTouch.InitTouch(LANDSCAPE);
-  myTouch.setPrecision( PREC_MEDIUM );  
+  myTouch.setPrecision( PREC_MEDIUM ); 
+  myTFT.ExtSetup(); 
   for(int line = 0; line <= 239; line++)
   {
     myGLCD.setColor(0, 0, line);//text color White  

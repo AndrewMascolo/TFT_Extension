@@ -9,9 +9,8 @@ extern uint8_t BigFont[];
 #define SIZE 10
 
 //myGLCD(RS,WR,CS,RST,ALE,mode);
-UTFT myGLCD(ITDB32S, A1,A2,A0,A3,A5);
-//myTouch(TCLK,TCS,DIN,DOUT,IRQ);
-UTouch  myTouch(13,10,11,12,A4);
+UTFT    myGLCD(ITDB32S, 38, 39, 40, 41);
+UTouch  myTouch( 6, 5, 4, 3, 2);
 TFT_Extension myTFT(&myGLCD, &myTouch);
 
 int Y,X,YDIR = 0,XDIR = 0, score= 0;

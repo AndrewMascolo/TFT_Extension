@@ -1,10 +1,41 @@
-/* TFT_Extension.cpp */
+/* TFT_Extension.cpp 
+
+The MIT License (MIT)
+
+Copyright (c) 2016 Andrew Mascolo Jr
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
 
 #include "TFT_Extension.h"
 #include <avr/pgmspace.h>
 
 #define Save_MainColor 		do{ FrontColor = _Disp->getColor(); BackColor = _Disp->getBackColor(); }while(0)
 #define Restore_MainColor	do{ _Disp->setColor(FrontColor); _Disp->setBackColor(BackColor); }while(0)
+
+template<typename T>
+void Swap(T &First, T &Second)
+{
+  T temp = First;
+  First  = Second;
+  Second = temp;
+}
 
 word TFT_Extension::ConvertRGB(byte R, byte G, byte B){ 
   return ( ((R & 0xF8) << 8) | ((G & 0xFC) << 3) | (B >> 3) );
@@ -43,7 +74,7 @@ const char Mobile_NumKeys[3][13] PROGMEM ={
 
 const char Mobile_SymKeys[3][13] PROGMEM ={
   {0,13,10,'[',']','{','}','#','%','^','*','+','='},
-  {4,9,6,'_','\\','|','~','<','>'},
+  {4,9,6,'_','\\','|','~','<','>'},//4
   {5,8,5,'.','\,','?','!','\''}
 };
 
@@ -61,14 +92,14 @@ struct TouchButtons{
   char * NPText[Num_Of_Buttons];
   bool TxtEnable[Num_Of_Buttons];
   bool Font_Size[Num_Of_Buttons];
-  bool Button[Num_Of_Buttons];
-  bool lastButton[Num_Of_Buttons];
+  byte Button[Num_Of_Buttons];
+  byte lastButton[Num_Of_Buttons];
   bool Fill[Num_Of_Buttons];
   bool Round[Num_Of_Buttons];
 }T_Button, T_Circle, L_Button, L_Circle, T_Triangle, L_Triangle;
 
 struct latching{
-  bool buttons;
+  byte buttons;
   bool circles;
   bool triangles;
   bool ButLock;
@@ -165,8 +196,8 @@ void TFT_Extension::DisplaySize()
   DispX = _Disp->disp_x_size; // Global variable will be set to X
   DispY = _Disp->disp_y_size; // ------------------------------ Y
   
-  if(_Disp->orient == LANDSCAPE)
-  swap(int, DispX, DispY);
+  if(_Disp->orient == LANDSCAPE) // questionable
+    Swap(DispX, DispY);
 }
  
 // This tells the compiler how many buttons and groups will be made.
@@ -189,10 +220,10 @@ bool TFT_Extension::RadioButton(int x1, int y1, int x2, int y2, uint8_t buttonNu
     int Ypos = (y2 + y1)/2; // -----------------------------
 	
 	if (x1>x2) // This makes sure the coordinates inputted are not backwards. Must be coords of top left and bottom right.  
-	  swap(int, x1, x2);
+	  Swap(x1, x2);
 
 	if (y1>y2) // same with this, top left and bottom right
-	  swap(int, y1, y2);
+	  Swap(y1, y2);
 
 	if(Butlocked[group] != Block.number[group] && !ButLOCK) // This makes allows the buttons to be made until locked out
 	{
@@ -436,10 +467,10 @@ bool TFT_Extension::TouchButton(int x1, int y1, int x2, int y2)
   int yc = (touchY > DispY? 0 : touchY); 
 
  if (x1 > x2)
-  swap(int ,x1 ,x2);
+  Swap(x1 ,x2);
 
  if (y1 > y2)
-  swap(int ,y1 ,y2);
+  Swap(y1 ,y2);
  
  if((xc >= x1) && (xc <= x2) && (yc >= y1) && (yc <= y2)) return true; // If the buttons coords are touched, return true.
  return false; // button coords were not touched, return false.
@@ -461,7 +492,7 @@ bool TFT_Extension ::TouchCircle(int cx, int cy, int radius)
 bool TFT_Extension ::TouchTriangle(int x1,int y1,int base, int deg)
 {
   if (_Disp->orient == PORTRAIT) 
-    swap(int ,x1 ,y1);
+    Swap(x1 ,y1);
 	
    _Touch->read();
    touchX = _Touch->getX();
@@ -514,10 +545,10 @@ bool TFT_Extension ::TouchTriangle(int x1,int y1,int base, int deg)
 bool TFT_Extension ::LatchButton( int x1, int y1, int x2, int y2, uint8_t buttonNumber)
 {
   if (x1>x2)
-	swap(int ,x1 ,x2);
+	Swap(x1 ,x2);
 
   if (y1>y2)
-	swap(int ,y1 ,y2);
+	Swap(y1 ,y2);
 	
   if( TouchButton(x1,y1,x2,y2) )
   {
@@ -585,8 +616,8 @@ bool TFT_Extension::TouchButton_Draw(int x1, int y1, int x2, int y2, uint8_t but
 	  
 	if(_Disp->orient == PORTRAIT)
 	{
-	 swap(int, x1,x2);
-	 swap(int, y1,y2);
+	 Swap(x1,x2);
+	 Swap(y1,y2);
 	}
 	
 	if(T_Button.Fill[buttonNumber]) // tell weather the button is rounded or not and filled or not.
@@ -703,8 +734,8 @@ bool TFT_Extension::Button(int x1, int y1, int x2, int y2, uint8_t buttonNumber,
 	
    if(_Disp->orient == PORTRAIT)
    {
-     swap(int, x1,x2);
-     swap(int, y1,y2);
+     Swap(x1,x2);
+     Swap(y1,y2);
    }
 
    if(T_Button.Fill[buttonNumber]) // tell weather the button is rounded or not and filled or not.
@@ -818,7 +849,7 @@ bool TFT_Extension::CircleButton(int cx, int cy, int radius, uint8_t circleNumbe
        _Disp->setColor(CircleColor2[circleNumber].buttons.rgb);
     
 	//if( _Orient == PORTRAIT)
-      //swap(int, cx,cy);
+      //Swap(int, cx,cy);
     if(T_Circle.Fill[circleNumber])
        _Disp->fillCircle(cx,cy,radius);
     else 
@@ -993,10 +1024,10 @@ bool TFT_Extension::TextButton(char *str, byte font_size, int x1, int y1, int x2
   int Ypos = (y2 + y1)/2; // -----------------------------
 
   if (x1 > x2)
-   swap(int ,x1 ,x2);
+   Swap(x1 ,x2);
 
   if (y1 > y2)
-   swap(int ,y1 ,y2);
+   Swap(y1 ,y2);
   
   _Disp->setColor(color);
   if(font_size == 1) //big font
@@ -1029,10 +1060,10 @@ bool TFT_Extension::LatchButton_Draw( int x1, int y1, int x2, int y2, uint8_t bu
   int Ypos = (y2 + y1)/2; // -----------------------------
   
   if (x1>x2)
-	swap(int ,x1 ,x2);
+	Swap(x1 ,x2);
 
   if (y1>y2)
-	swap(int ,y1 ,y2);
+	Swap(y1 ,y2);
 	
   if( TouchButton(x1,y1,x2,y2) ) // See the comment from TouchButton
   {
@@ -1044,30 +1075,30 @@ bool TFT_Extension::LatchButton_Draw( int x1, int y1, int x2, int y2, uint8_t bu
   }
   else L[buttonNumber].ButLock = true;
   
-  if(L[buttonNumber].buttons) // This looks to see if the button is latched or not
-    L_Button.Button[buttonNumber] = true;
-  else 
-    L_Button.Button[buttonNumber] = false;
- 
-  if(L_Button.Button[buttonNumber] != L_Button.lastButton[buttonNumber]) // Allow button to be pressed and not held 
+  L_Button.Button[buttonNumber] = !!(L[buttonNumber].buttons);// This looks to see if the button is latched or not
+
+  if(L[buttonNumber].buttons != L_Button.lastButton[buttonNumber]) // Allow button to be pressed and not held 
   {
-    if(L[buttonNumber].buttons) // Set the color of the button based on the latched state.
+    if(L_Button.Button[buttonNumber]) // Set the color of the button based on the latched state.
        _Disp->setColor(ButtonColor1[buttonNumber].latches.rgb);
     else 
        _Disp->setColor(ButtonColor2[buttonNumber].latches.rgb);
+	    
     if (_Disp->orient == PORTRAIT)
 	{
-	  swap(int, x1,x2);
-	  swap(int, y1,y2);
+	  Swap(x1,x2);
+	  Swap(y1,y2);
 	}
+	
     if(L_Button.Fill[buttonNumber]) // See if button is told to be rounded or not and filled or not.
        L_Button.Round[buttonNumber]? _Disp->fillRoundRect(x1,y1,x2,y2) : _Disp->fillRect(x1,y1,x2,y2);
     else 
 	   L_Button.Round[buttonNumber]? _Disp->drawRoundRect(x1,y1,x2,y2) : _Disp->drawRect(x1,y1,x2,y2);
+	   
+	L_Button.lastButton[buttonNumber] = L[buttonNumber].buttons;
   }
-  L_Button.lastButton[buttonNumber] = L_Button.Button[buttonNumber];
   
-  if(L_Button.TxtEnable[buttonNumber]) // If there is text for that button, show it.
+   if(L_Button.TxtEnable[buttonNumber]) // If there is text for that button, show it.
    {
 	 if(ButtonColor1[buttonNumber].latches.rgb == ButtonColor2[buttonNumber].latches.rgb)
 	  {
@@ -1158,7 +1189,7 @@ bool TFT_Extension ::TouchCircle_Draw(int cx, int cy, int radius, uint8_t circle
        _Disp->setColor(CircleColor2[circleNumber].buttons.rgb);
     
 	//if( _Orient == PORTRAIT)
-      //swap(int, cx,cy);
+      //Swap(int, cx,cy);
     if(T_Circle.Fill[circleNumber])
        _Disp->fillCircle(cx,cy,radius);
     else 
@@ -1298,7 +1329,7 @@ bool TFT_Extension ::LatchCircle_Draw(int cx, int cy, int radius, uint8_t circle
 }
 
 //Calculate the area of an equilateral triangle  
-float TFT_Extension::Area(int Ax, int Ay, int Bx, int By, int Cx, int Cy)
+long TFT_Extension::Area(long Ax, long Ay, long Bx, long By, long Cx, long Cy)
 {
  return abs((Ax*(By - Cy) + Bx*(Cy - Ay) + Cx*(Ay - By))/2);
 }
@@ -1540,6 +1571,11 @@ uint8_t TFT_Extension::TouchArc(int cx, int cy, int radius, int thickness, int s
   return percent;
 }
 
+void TFT_Extension::ResetVertSlider(byte _ID)
+{
+  VSliders[_ID].locked = false;
+}
+
 uint8_t TFT_Extension::VertSlider(int x1, int y1, int x2, int y2, byte _ID, word color)
 {
   if(!VSliders[_ID].locked)
@@ -1573,6 +1609,11 @@ uint8_t TFT_Extension::VertSlider(int x1, int y1, int x2, int y2, byte _ID, word
     } 
   } 
   return map(VSliders[_ID].Slide, y2, y1, 0 ,100);
+}
+
+void TFT_Extension::ResetHorSlider(byte _ID)
+{
+  HSliders[_ID].locked = false;
 }
 
 uint8_t TFT_Extension::HorSlider(int x1, int y1, int x2, int y2, byte _ID, word color, bool direction)
@@ -2278,7 +2319,7 @@ void TFT_Extension::SetAll_RCB_Untoggled_Color(word color)
 //======================================================================
 //
 //======================================================================
-void TFT_Extension::Triangle(int x1, int y1,int x2,int y2,int x3,int y3)
+void TFT_Extension::drawTriangle(int x1, int y1,int x2,int y2,int x3,int y3)
 {
   _Disp->drawLine(x1,y1,x2,y2);// lean left
   _Disp->drawLine(x2,y2,x3,y3);// _ base
@@ -2306,27 +2347,27 @@ void TFT_Extension::drawTriangle(int x1, int y1, int base, int deg)
     switch(dir)
     {
      case up:
-       Triangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2-1);
+       drawTriangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2-1);
        break;
 	   
      case down:
-	   Triangle(Cx+1,Cy,Cx1+1,Cy1,Cx2+1,Cy2+1);
+	   drawTriangle(Cx+1,Cy,Cx1+1,Cy1,Cx2+1,Cy2+1);
        break;
 	   
      case left:
-	   Triangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2+1);
+	   drawTriangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2+1);
        break;
 	   
      case right:
-	   Triangle(Cx,Cy,Cx1,Cy1,Cx2+1,Cy2);
+	   drawTriangle(Cx,Cy,Cx1,Cy1,Cx2+1,Cy2);
        break;
     }
   }
   else 
-    Triangle(Cx,Cy,Cx1,Cy1,Cx2,Cy2); 
+    drawTriangle(Cx,Cy,Cx1,Cy1,Cx2,Cy2); 
 }
  
-void TFT_Extension ::fillTriangle(int x1,int y1,int base, int deg)
+void TFT_Extension::fillTriangle(int x1,int y1,int base, int deg)
 {   
   int rad = base/2; int dir;
 
@@ -2342,41 +2383,113 @@ void TFT_Extension ::fillTriangle(int x1,int y1,int base, int deg)
   Cx2 = x1 + sin((float(deg) + 240) * deg_to_rad) * rad;
   Cy2 = y1 + cos((float(deg) + 240) * deg_to_rad) * rad;
   
-  //if(base >= 60)
-  //{
-    switch(dir)
-    {
-     case up:
-       Triangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2-1);
-	   fillPoly(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2-1);
-	   fillPoly(Cx1,Cy1,Cx2-1,Cy2-1,Cx,Cy);
-       break;
-	   
-     case down:
-	   Triangle(Cx+1,Cy,Cx1+1,Cy1,Cx2+1,Cy2+1);
-	   fillPoly(Cx+1,Cy,Cx1+1,Cy1,Cx2+1,Cy2+1);
-	   fillPoly(Cx1+1,Cy1,Cx2+1,Cy2+1,Cx+1,Cy);
-       break;
-	   
-     case left:
-	   Triangle(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2+1);
-	   fillPoly(Cx,Cy,Cx1,Cy1,Cx2-1,Cy2+1);
-	   fillPoly(Cx1,Cy1,Cx,Cy,Cx2-1,Cy2+1);
-       break;
-	   
-     case right:
-	   Triangle(Cx,Cy,Cx1,Cy1,Cx2+1,Cy2);
-	   fillPoly(Cx,Cy,Cx1,Cy1,Cx2+1,Cy2);
-	   fillPoly(Cx1,Cy1,Cx,Cy,Cx2+1,Cy2);
-       break;
-    }
- // }
-  //else 
-    //Triangle(Cx,Cy,Cx1,Cy1,Cx2,Cy2); 
+  // int Bmost = max(Cy, max(Cy1,Cy2));
+  // int Tmost = min(Cy, min(Cy1,Cy2));
+  // int Lmost = min(Cx, min(Cx1,Cx2));
+  // int Rmost = max(Cx, max(Cx1,Cx2));
+  // bool in, lastIn = LOW;
   
-  //having two does take longer, but this ensures that the triangle is completely filled. 
-  //fillPoly(Cx1,Cy1,Cx2,Cy2,Cx,Cy);
+  // for(int x = Lmost; x < Rmost; x++)
+  // {
+	// lastIn = LOW;
+	// for(int y = Tmost; y < Bmost; y++)
+	// {
+	  // if(in = PointInTriangle(x, y, Cx, Cy, Cx1, Cy1, Cx2, Cy2)) // check to see if the x/y coordinates lie within the triangle
+	  // {
+		// _Disp->drawPixel(x, y);
+		// lastIn = in;
+	  // }
+	  
+	  // if(in == LOW && lastIn == HIGH)
+	  // {
+		// lastIn = LOW;
+		// break;
+	  // }
+	// }
+  // }  
+  fillTriangle(Cx,Cy, Cx1,Cy1, Cx2,Cy2);
 }
+
+bool TFT_Extension::PointInTriangle(int tx, int ty, int Cx, int Cy, int Cx1, int Cy1, int Cx2, int Cy2)
+{
+  long A = Area(Cx, Cy, Cx1, Cy1, Cx2, Cy2); // This is the ideal area of the triangle based on the 3 points.
+  long A1 = Area(tx, ty, Cx1, Cy1, Cx2, Cy2);// this checks to see if the touch coords are within the created triangle.
+  long A2 = Area(Cx, Cy, tx, ty, Cx2, Cy2);  // The reason three are needed is because each one is a section of the triangle.
+  long A3 = Area(Cx, Cy, Cx1, Cy1, tx, ty);
+
+  if(A >= (A1 + A2 + A3)) 
+    return true;
+	
+  return false;
+}
+
+void TFT_Extension::fillTriangle(int x1, int y1,int x2,int y2,int x3,int y3)
+{
+  float A,B,C;
+  int XL, XR;
+  
+  if(y1 > y2)
+  {
+    Swap(x1, x2);
+	Swap(y1, y2);
+  }
+  
+  if(y2 > y3)
+  {
+    Swap(x2, x3);
+	Swap(y2, y3);
+  }
+  
+  if(y1 > y2)
+  {
+    Swap(x1, x2);
+	Swap(y1, y2);
+  }
+  
+  A = float(x2 - x1)/float((y2 - y1)? (y2 - y1) : 1);
+  B = float(x3 - x1)/float((y3 - y1)? (y3 - y1) : 1);
+  C = float(x3 - x2)/float((y3 - y2)? (y3 - y2) : 1);
+  
+  for(int Dy = y1; Dy <= y3; Dy++)
+  {
+    if(Dy <= y2)
+	  XL = x1 + A*(Dy - y1);
+	else
+	  XL = x2 + C*(Dy - y2);
+	  
+	XR = x1 + B*(Dy - y1);
+	
+	_Disp->drawHLine(XL, Dy, (XR - XL));
+  } 
+}
+
+// fillTriangle(int Cx, int Cy, int Cx1, int Cy1, int Cx2, int Cy2)
+// {
+  // int Bmost = max(Cy, max(Cy1,Cy2));
+  // int Tmost = min(Cy, min(Cy1,Cy2));
+  // int Lmost = min(Cx, min(Cx1,Cx2));
+  // int Rmost = max(Cx, max(Cx1,Cx2));
+  // bool in, lastIn = LOW;
+  
+  // for(int x = Lmost; x < Rmost; x++)
+  // {
+	// lastIn = LOW;
+	// for(int y = Tmost; y < Bmost; y++)
+	// {
+	  // if(in = PointInTriangle(x, y, Cx, Cy, Cx1, Cy1, Cx2, Cy2)) // check to see if the x/y coordinates lie within the triangle
+	  // {
+		// _Disp->drawPixel(x, y);
+		// lastIn = in;
+	  // }
+	  
+	  // if(in == LOW && lastIn == HIGH)
+	  // {
+		// lastIn = LOW;
+		// break;
+	  // }
+	// }
+  // }  
+// }
 
 void TFT_Extension::Polygon(int cx, int cy, int sides, int diameter, word color, bool fill, float deg)
 { 
@@ -2413,7 +2526,7 @@ void TFT_Extension::fillPoly(int x1, int y1, int x2, int y2, int x3, int y3)
   float xx, yy;
   xx = abs(x3-x2);
   yy = abs(y3-y2)/(xx == 0? 1:xx);
-  for(float i = 0; i <= xx; i+=0.2)
+  for(float i = 0; i <= xx; i+= (yy/xx)/2) // i+=0.2
   {
     _Disp->drawLine(x1,y1, x2 + (x2>x3 ? -i:i), y2 + ((yy*i) * (y2 > y3 ? -1 : 1) ));
   }
@@ -2472,7 +2585,7 @@ void TFT_Extension::drawArc(int cx, int cy, int radius, int thickness, int start
 {
   stop-=1;
   if(start > stop)
-    swap(int, start, stop);
+    Swap(start, stop);
 	
   int XI,YI,XR,YR,XL,YL;
   thickness = constrain(thickness, 0, radius);
@@ -2505,7 +2618,7 @@ void TFT_Extension::drawOvalArc(int cx, int cy, int Xradius, int Yradius, int Xt
 {
   stop-=1;
   if(start > stop)
-    swap(int, start, stop);
+    Swap(start, stop);
 	
   int XI,YI,XR,YR,XL,YL;
   Xthickness = constrain(Xthickness, 0, Xradius);
@@ -2607,7 +2720,7 @@ void TFT_Extension::rounded_Square(int cx, int cy, int h, int w, float radius, w
 	    tmp = (cx - newW) - XPend[angle]; // get the last Xcoord from the first angle
         tmp2 = (cx - newW) - XPstart[angle]; // get the first Xcoord from the second angle
         _Disp->drawLine(XPend[angle], YPend[angle],XPend[angle] + (tmp*2) + (w-radius), YPend[angle]); 
-		}
+	  }
       else // no fill
         _Disp->drawPixel(XPend[angle], YPend[angle]);
     }
@@ -2929,8 +3042,8 @@ void TFT_Extension::SetupStandardKB()
 	if(_Disp->orient == LANDSCAPE)
 	{
 		_FONT = Small;
-		XoffSet=60;
-		YoffSet=160;
+		XoffSet=60; // 60
+		YoffSet=160; // 160
 		TxtoffSet = 20;
 		SEND.x1 = 270; SEND.y1 =160; SEND.x2 =310; SEND.y2 =180;
 		BSP.x1 = 270; BSP.y1 = 190; BSP.x2 = 310; BSP.y2 = 210;
@@ -2960,31 +3073,47 @@ void TFT_Extension::SetupStandardKB()
 	Restore_MainColor; 
 }
 
-void TFT_Extension::SetupMobileKB()
-{
+void TFT_Extension::SetupMobileKB(int X, int Y, float SX, float SY)
+{	
+	if(_Disp->orient == LANDSCAPE)
+	{
+    // all values are based off of SX and SY
+    ScaleX = SX = ((SX > 320)? SX : 320); // minimum scaleX is 320
+	ScaleY = SY = ((SY > 115)? SY : 115); // minimum scaleY is 115
+	}
+	else
+	{
+	  // all values are based off of SX and SY
+    ScaleX = SX = ((SX > 300)? SX : 300); // minimum scaleX is 320
+	ScaleY = SY = ((SY > 110)? SY : 110); // minimum scaleY is 115
+	}
+	
     RCV_locked= false;
     RCV_cnt = 0;
+	//KB_Scale = Scale;
+	
 	if(_Disp->orient == LANDSCAPE)
 	{
 		_FONT = Big;
-		XoffSet=18;
-		YoffSet=120;
+		XoffSet=X + 0.056*SX;
+		YoffSet= Y ;
 		TxtoffSet = 0;
-		SEND.x1 = 240; SEND.y1 =215; SEND.x2 = 310; SEND.y2 = 235;
-		BSP.x1 = 253; BSP.y1 = 187; BSP.x2 = 310; BSP.y2 = 207;
-		CAPS.x1 = 5; CAPS.y1 = 187; CAPS.x2 = 40; CAPS.y2 = 207;
-		SPACE.x1 = 98; SPACE.y1 = 215; SPACE.x2 = 218; SPACE.y2 = 235;
-		NUM.x1 = 5; NUM.y1 = 215; NUM.x2 = 75; NUM.y2 = 235;
+		SEND.x1 = XoffSet + (0.69*SX); SEND.y1 = YoffSet + (0.826*SY); SEND.x2 = XoffSet + (0.912*SX); SEND.y2 = YoffSet + SY;
+		BSP.x1 = XoffSet + 0.73*SX; BSP.y1 = YoffSet + 0.58*SY; BSP.x2 = XoffSet + 0.912*SX; BSP.y2 = YoffSet +0.756*SY;
+		CAPS.x1 = XoffSet - 0.04*SX; CAPS.y1 = YoffSet + 0.58*SY; CAPS.x2 = XoffSet + 0.0687*SX; CAPS.y2 = YoffSet +0.756*SY;
+		SPACE.x1 = XoffSet + 0.25*SX; SPACE.y1 = YoffSet + 0.826*SY; SPACE.x2 = XoffSet +0.625*SX; SPACE.y2 = YoffSet + SY;
+		NUM.x1 = XoffSet - 0.04*SX; NUM.y1 = YoffSet + 0.826*SY; NUM.x2 = XoffSet + 0.178*SX; NUM.y2 = YoffSet + SY;
 		Type = 0;
 		_symbol = 0;
 	}
 	else
 	{
 		_FONT = Small;
-		XoffSet=25;
-		YoffSet=230;
+		XoffSet= X + 26;
+		YoffSet = Y;
+		
 		TxtoffSet = 0;
-		SEND.x1 =180; SEND.y1 = 300; SEND.x2 = 230; SEND.y2 = 315;
+		SEND.x1 = XoffSet + 154; SEND.y1 = 300; SEND.x2 = XoffSet + 204; SEND.y2 = 315;
 		BSP.x1 = 190; BSP.y1 = 281; BSP.x2 = 230; BSP.y2 = 296;
 		CAPS.x1 = 5; CAPS.y1 = 281; CAPS.x2 = 25; CAPS.y2 = 296;
 		SPACE.x1 = 85; SPACE.y1 = 300; SPACE.x2 = 150; SPACE.y2 = 315;
@@ -2998,7 +3127,7 @@ void TFT_Extension::SetupMobileKB()
 	_Disp->fillRect(0,YoffSet,_Disp->getDisplayXSize() - 1, _Disp->getDisplayYSize() - 1);
     _Disp->setColor(0xFFFF);
     _Disp->setFont(SmallFont);	
-    _Disp->print(">>",0, YoffSet-TxtoffSet);
+    _Disp->print(">>",XoffSet - 18, YoffSet-TxtoffSet);
 	
     make_Mobile_Keyboard();
     clearMSG();
@@ -3043,8 +3172,9 @@ void TFT_Extension::make_Mobile_Keyboard()
   {
     for(byte col = 3; col < 17; col++)
     {
-	  _Disp->drawRoundRect(XoffSet + (_FONT? 30:20)*(col-3) + (15* pgm_read_byte(&(Mobile_KB[row][0])))-4,(YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + (15* pgm_read_byte(&(Mobile_KB[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)); 
-      _Disp->printChar( pgm_read_byte(&(Mobile_KB[row][col])), XoffSet + (_FONT? 30:20)*(col-3) + (15* pgm_read_byte(&(Mobile_KB[row][0]))), (YoffSet) + (_FONT? 23:18)*(row+1));
+	  _Disp->drawRoundRect(XoffSet + (_FONT? 0.093:0.0625)*ScaleX*(col-3) + (0.046*ScaleX* pgm_read_byte(&(Mobile_KB[row][0])))-0.0125*ScaleX,(YoffSet) + ((_FONT? 0.2:0.156)*ScaleY*(row+1)) - 0.017*ScaleY, XoffSet + (_FONT? 0.093:0.0625)*ScaleX*(col-3) + (0.046*ScaleX* pgm_read_byte(&(Mobile_KB[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 1, (YoffSet) + ((_FONT? 0.2:0.156)*ScaleY*(row+1)) + (_FONT? 0.139:0.104)*ScaleY); 
+      
+	  _Disp->printChar( pgm_read_byte(&(Mobile_KB[row][col])), XoffSet + (_FONT? 0.093:0.0625)*ScaleX*(col-3) + (0.046*ScaleX* pgm_read_byte(&(Mobile_KB[row][0]))), (YoffSet) + (_FONT? 0.2:0.156)*ScaleY*(row+1)-1);
 	  if(pgm_read_byte(&(Mobile_KB[row][2])) == col-2) break; 
       
     }
@@ -3066,7 +3196,7 @@ void TFT_Extension::make_Mobile_Keyboard()
   Restore_MainColor;
 }
 
-void TFT_Extension::makeShiftKeys()
+void TFT_Extension::makeShiftKeys() //standard kb
 { 
   _Disp->drawRect(XoffSet, YoffSet-1, XoffSet+ 12*16, YoffSet+(14*4)-1);
   _Disp->setColor(RED);
@@ -3085,9 +3215,9 @@ void TFT_Extension::makeShiftKeys()
 void TFT_Extension::makeNumberKeys()
 { 
   _Disp->setColor(BLACK);
-  _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
+  _Disp->fillRect(XoffSet - 0.0125*ScaleX,(YoffSet) + (_FONT? 0.2:0.156)*ScaleY - 0.017*ScaleY, XoffSet + (_FONT? 0.843:0.5)*ScaleX + 0.053*ScaleX,(YoffSet) + ((_FONT? 0.4:0.261)*ScaleY) + 0.156*ScaleY);
   
-  _Disp->fillRect(50,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
+  _Disp->fillRect(0.156*ScaleX,(YoffSet) + ((_FONT? 0.6:0.443)*ScaleY) - 0.017*ScaleY, XoffSet + (_FONT? 0.665:0.456)*ScaleX + 0.053*ScaleX,(YoffSet) + ((_FONT? 0.6:0.417)*ScaleY) + 0.174*ScaleY);
   
   if(_FONT == Big)
     _Disp->setFont(BigFont);
@@ -3100,9 +3230,9 @@ void TFT_Extension::makeNumberKeys()
   {
     for(byte col = 3; col < 17; col++)
     {
-	  _Disp->drawRoundRect(XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_NumKeys[row][0])))-4, (YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_NumKeys[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)); 
+	  _Disp->drawRoundRect(XoffSet + (_FONT? 0.094:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.0312)*ScaleX* pgm_read_byte(&(Mobile_NumKeys[row][0])))- 0.0125*ScaleX, YoffSet + (_FONT? 0.2:0.1565)*ScaleY*(row+1) - 0.0173*ScaleY, XoffSet + (_FONT? 0.0937:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_NumKeys[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 0.0003*ScaleX, YoffSet + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) + (_FONT? 0.139:0.1043)*ScaleY); 
       
-	  _Disp->printChar( pgm_read_byte(&(Mobile_NumKeys[row][col])), XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_NumKeys[row][0]))), (YoffSet) + (_FONT? 23:18)*(row+1));
+	  _Disp->printChar( pgm_read_byte(&(Mobile_NumKeys[row][col])), XoffSet + (_FONT? 0.0937:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_NumKeys[row][0]))), (YoffSet) + (_FONT? 0.2:0.1565)*ScaleY*(row+1));
 	  
 	  if(pgm_read_byte(&(Mobile_NumKeys[row][2])) == col-2) break; 
     }
@@ -3116,23 +3246,24 @@ void TFT_Extension::makeNumberKeys()
 void TFT_Extension::makeSymbolKeys()
 { 
   _Disp->setColor(BLACK);
-  _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
+  _Disp->fillRect(XoffSet - 0.0125*ScaleX,(YoffSet) + ((_FONT? 0.2:0.1565)- 0.01739)*ScaleY , XoffSet + ((_FONT? 0.8437:0.5625) + 0.0531)*ScaleX,(YoffSet) + ((_FONT? 0.4:0.2608)*ScaleY) + 0.1565*ScaleY);
   
-  _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
+  _Disp->fillRect(0.01562*ScaleX, YoffSet + ((_FONT? 0.6:0.4434) - 0.0173)*ScaleY, XoffSet + ((_FONT? 0.6562:0.4562) + 0.05312)*ScaleX,YoffSet + ((_FONT? 0.6:0.4173) + 0.1739)*ScaleY);
   if(_FONT == Big)
     _Disp->setFont(BigFont);
   else 
     _Disp->setFont(SmallFont);
   //SmileyFaces(false);
-  _Disp->setColor(WHITE);
+  _Disp->setColor(WHITE);//White
 
   for(byte row = 0; row < 3; row++)
   {
     for(byte col = 3; col < 17; col++)
     {
-	  _Disp->drawRoundRect(XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0])))-4, (YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)); 
+      _Disp->drawRoundRect(XoffSet + (_FONT? 0.0937:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX * pgm_read_byte(&(Mobile_SymKeys[row][0])))-0.0125*ScaleX, (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) - 0.01739*ScaleY, XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_SymKeys[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 0.003125*ScaleX, (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) + (_FONT? 0.139:0.1043)*ScaleY); 
       
-	  _Disp->printChar( pgm_read_byte(&(Mobile_SymKeys[row][col])), XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0]))), (YoffSet) + (_FONT? 23:18)*(row+1));
+	  _Disp->printChar( pgm_read_byte(&(Mobile_SymKeys[row][col])), XoffSet + (_FONT? 0.0937:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.0313)*ScaleX* pgm_read_byte(&(Mobile_SymKeys[row][0]))), (YoffSet) + (_FONT? 0.2:0.1565)*ScaleY*(row+1));
+	  //_Disp->printChar( pgm_read_byte(&(Mobile_SymKeys[row][col])), XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0]))), (YoffSet) + (_FONT? 23:18)*(row+1));
 	  if(pgm_read_byte(&(Mobile_SymKeys[row][2])) == col-2) break; 
     }
   }
@@ -3143,7 +3274,7 @@ void TFT_Extension::makeSymbolKeys()
   //_Disp->print("#", ((CAPS.x1 + CAPS.x2)/2) - 7, ((CAPS.y1 + CAPS.y2)/2) - 8);
 }
 
-void TFT_Extension::makeCapsKeys()
+void TFT_Extension::makeCapsKeys() // standard KB
 {
   _Disp->setColor(GREEN);
   _Disp->drawRect(XoffSet, YoffSet-1, XoffSet+ 12*16, YoffSet+(14*4)-1);
@@ -3315,8 +3446,9 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 		  else 
 		  {
 		    _symbol = false;
-			_Disp->setColor(BLACK);
-			_Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
+			_Disp->setColor(BLACK);//black
+			_Disp->fillRect(0.01562*ScaleX, YoffSet + ((_FONT? 0.6:0.4434) - 0.0173)*ScaleY, XoffSet + ((_FONT? 0.6562:0.4562) + 0.05312)*ScaleX, YoffSet + ((_FONT? 0.6:0.4173) + 0.1739)*ScaleY);
+			//_Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
 			_Disp->setColor(WHITE);
 			_Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
 		    makeNumberKeys();
@@ -3327,7 +3459,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
       
 	  if(Type == 0)
 	  {
-        if( TouchButton( XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:15)* pgm_read_byte(&(Mobile_KB[row][0])))-4, (YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:15)* pgm_read_byte(&(Mobile_KB[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)) )
+        if( TouchButton( XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((0.0468*ScaleX)* pgm_read_byte(&(Mobile_KB[row][0])))-(0.0125*ScaleX), (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) - 0.01739*ScaleY, XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((0.0468*ScaleX)* pgm_read_byte(&(Mobile_KB[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 1, (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) + (_FONT? 0.1391:0.104)*ScaleY) )
         {  
           if(Shift)
           { 
@@ -3340,30 +3472,30 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
             MSG[idx] = pgm_read_byte(&(Mobile_KB[row][col])) + ('a' - 'A'); // show lower case
 
           (idx+1) < BUF? idx++: idx;
-		  _Disp->setBackColor(0xFFFFFFFF);
-          _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+		  _Disp->setBackColor(_Disp->getBackColor());
+          _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);
         }
 	  }
 	  else
 	  {
 	    if(_symbol == 0)
 		{
-	      if( TouchButton(XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_NumKeys[row][0])))-4, (YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_NumKeys[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)) )
+	      if( TouchButton(XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_NumKeys[row][0])))-(0.0125*ScaleX), (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) - 0.01739*ScaleY, XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_NumKeys[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 0.003125*ScaleX, (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) + (_FONT? 0.1391:0.1043)*ScaleY) )
           {
 		    MSG[idx] = pgm_read_byte(&(Mobile_NumKeys[row][col]));
 		    (idx+1) < BUF? idx++: idx;
-			_Disp->setBackColor(0xFFFFFFFF);
-            _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+			_Disp->setBackColor(_Disp->getBackColor());
+            _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);
 		  }
 		}
 		else 
 		{
-		  if( TouchButton(XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0])))-4, (YoffSet) + ((_FONT? 23:18)*(row+1)) - 2, XoffSet + (_FONT? 30:20)*(col-3) + ((_FONT? 15:10)* pgm_read_byte(&(Mobile_SymKeys[row][0]))) + (_FONT? 16:8) + 1, (YoffSet) + ((_FONT? 23:18)*(row+1)) + (_FONT? 16:12)) )
+		  if( TouchButton(XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_SymKeys[row][0])))-(0.0125*ScaleX), (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) - 0.01739*ScaleY, XoffSet + (_FONT? 0.09375:0.0625)*ScaleX*(col-3) + ((_FONT? 0.0468:0.03125)*ScaleX* pgm_read_byte(&(Mobile_SymKeys[row][0]))) + (_FONT? 0.05:0.025)*ScaleX + 0.00313*ScaleX, (YoffSet) + ((_FONT? 0.2:0.1565)*ScaleY*(row+1)) + (_FONT? 0.1391:0.1043)*ScaleY) )
           {
 		    MSG[idx] = pgm_read_byte(&(Mobile_SymKeys[row][col]));
 		    (idx+1) < BUF? idx++: idx;
-			_Disp->setBackColor(0xFFFFFFFF);
-            _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+			_Disp->setBackColor(_Disp->getBackColor());
+            _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);
 		  }
 		}
 	  }
@@ -3371,8 +3503,8 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
       {
 		MSG[idx] = ' ';
         (idx+1) < BUF? idx++: idx;
-		_Disp->setBackColor(0xFFFFFFFF);
-        _Disp->print(MSG, 20, YoffSet - TxtoffSet);	
+		_Disp->setBackColor(_Disp->getBackColor());
+        _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);	
       }		
     }
   }
@@ -3384,8 +3516,8 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	strncpy(RET_MSG, MSG, sizeof(MSG));
     idx = 0;  
     clearMSG();
-	_Disp->setBackColor(0xFFFFFFFF);
-    _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+	_Disp->setBackColor(_Disp->getBackColor());
+    _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);
 	
 	Restore_MainColor;
 	_Disp->setColor(color);
@@ -3397,8 +3529,8 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
     idx < 1? 0 : idx--;
     MSG[idx] = ' ';
 	//MSG[idx] = '\0';
-	_Disp->setBackColor(0xFFFFFFFF);
-    _Disp->print(MSG, 20, YoffSet - TxtoffSet);
+	_Disp->setBackColor(_Disp->getBackColor());
+    _Disp->print(MSG, XoffSet, YoffSet - TxtoffSet);
   }
   
   if( TouchButton(NUM.x1, NUM.y1, NUM.x2, NUM.y2)) // numbers
@@ -3406,10 +3538,11 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
     if(_symbol == 0)
 	{
       Type = !Type;
-	  _Disp->setColor(BLACK);
-      _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
+	  _Disp->setColor(BLACK);//black
+      _Disp->fillRect(XoffSet - 0.0125*ScaleX,(YoffSet) + ((_FONT? 0.2:0.1565) - 0.01739)*ScaleY, XoffSet + ((_FONT? 0.8437:0.5625) + 0.05312)*ScaleX,(YoffSet) + ((_FONT? 0.4:0.2608) + 0.1565)*ScaleY );
   
-      _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
+      _Disp->fillRect(0.01562*ScaleX, YoffSet + ((_FONT? 0.6:0.4434) - 0.0173)*ScaleY, XoffSet + ((_FONT? 0.6562:0.4562) + 0.05312)*ScaleX,YoffSet + ((_FONT? 0.6:0.4173) + 0.1739)*ScaleY);
+	  //_Disp->fillRect(0.01562*ScaleX,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
 	  if(Type)
         makeNumberKeys();
 	  else 
@@ -3420,8 +3553,10 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	{
 	  Type = 0;
 	  _Disp->setColor(BLACK); // ok
-	  _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
-      _Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
+	  _Disp->fillRect(XoffSet - 0.0125*ScaleX,(YoffSet) + ((_FONT? 0.2:0.1565)- 0.01739)*ScaleY , XoffSet + ((_FONT? 0.8437:0.5625) + 0.0531)*ScaleX,(YoffSet) + ((_FONT? 0.4:0.2608)*ScaleY) + 0.1565*ScaleY);
+	 // _Disp->fillRect(XoffSet - 4,(YoffSet) + (_FONT? 23:18) - 2, XoffSet + (_FONT? 30:20)*9 + 17,(YoffSet) + ((_FONT? 23:15)*2) +18);
+	 _Disp->fillRect(0.01562*ScaleX, YoffSet + ((_FONT? 0.6:0.4434) - 0.0173)*ScaleY, XoffSet + ((_FONT? 0.6562:0.4562) + 0.05312)*ScaleX,YoffSet + ((_FONT? 0.6:0.4173) + 0.1739)*ScaleY);
+      //_Disp->fillRect(5,(YoffSet) + ((_FONT? 23:17)*3) - 2, XoffSet + (_FONT? 30:15)*6 +(_FONT? 15:28)*2 + 17,(YoffSet) + ((_FONT? 23:16)*3) +20);
 	  
 	  _Disp->setColor(WHITE);
 	  _Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key

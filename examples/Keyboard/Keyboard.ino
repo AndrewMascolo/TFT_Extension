@@ -4,10 +4,8 @@
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 
-//myGLCD(RS,WR,CS,RST,ALE,mode);
-UTFT myGLCD(A1,A2,A0,A3,A5,ITDB32S);
-//myTouch(TCLK,TCS,DIN,DOUT,IRQ);
-UTouch  myTouch(13,10,11,12,A4);
+UTFT    myGLCD(CTE70, 38, 39, 40, 41);
+UTouch  myTouch( 6, 5, 4, 3, 2);
 TFT_Extension myTFT(&myGLCD, &myTouch);
 
 char* msg;
@@ -15,16 +13,16 @@ char* msg;
 void setup()
 {
   Serial1.begin(9600); // default bluetooth baudrate.
-  myGLCD.InitLCD(LANDSCAPE);
+  myGLCD.InitLCD(PORTRAIT);
   myGLCD.clrScr();
   myGLCD.setFont(SmallFont);
-  myTouch.InitTouch(LANDSCAPE);
-  myTouch.setPrecision(PREC_LOW);
+  myTouch.InitTouch(PORTRAIT);
+  myTouch.setPrecision(PREC_MEDIUM);
   myTFT.ExtSetup();
   
   myGLCD.fillScr(0,0,0);
 
-  myTFT.SetupMobileKB(); //NEEDED TO WORK!
+  myTFT.SetupMobileKB(0,150); //NEEDED TO WORK!
 }
 
 void loop()

@@ -4,9 +4,10 @@
 // Declare which fonts we will be using
 extern uint8_t SmallFont[];
 extern uint8_t BigFont[];
-
-UTFT myGLCD(ITDB32S,A1,A2,A0,A3,A5); //myGLCD(RS,WR,CS,RST,ALE,mode);
-UTouch  myTouch(13,10,11,12,A4); //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
+UTFT    myGLCD(ITDB32S, 38, 39, 40, 41);
+UTouch  myTouch( 6, 5, 4, 3, 2);
+//UTFT myGLCD(ITDB32S,A1,A2,A0,A3,A5); //myGLCD(RS,WR,CS,RST,ALE,mode);
+//UTouch  myTouch(13,10,11,12,A4); //myTouch(TCLK,TCS,DIN,DOUT,IRQ);
 TFT_Extension myTFT(&myGLCD, &myTouch);
 
 struct {
