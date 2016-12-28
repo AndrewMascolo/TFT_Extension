@@ -1,7 +1,7 @@
 /*
   Library created by Andrew Mascolo : 2/18/2014
   VERSION 1.4
-  This library is an extension to Henning Karlsen's UTFT, UTouch, ITDB02_Graph16 and ITDB02_Touch.
+  This library is an extension to Henning Karlsen's UTFT, URTouch, ITDB02_Graph16 and ITDB02_Touch.
   
   Function ideas from others:
     rounded_Square :: robtillaart
@@ -41,21 +41,21 @@ SOFTWARE.
 #include <Arduino.h>
 
 #include <UTFT.h>
-#include <UTouch.h>
+#include <URTouch.h>
 
 #include <math.h>
 
-#ifdef UTFT_h
-#define DISPLAY UTFT
-#else
-#define DISPLAY ITDB02
-#endif
+/* #ifdef UTFT_h */
+/* #define DISPLAY UTFT */
+/* #else */
+/* #define DISPLAY ITDB02 */
+/* #endif */
 
-#ifdef UTouch_h
-#define TOUCH UTouch
-#else
-#define TOUCH ITDB02_Touch
-#endif
+/* #ifdef URTouch_h */
+/* #define TOUCH URTouch */
+/* #else */
+/* #define TOUCH ITDB02_Touch */
+/* #endif */
 
 //=====================COLOR_PALLET==========================
 #define BLACK   0x0
@@ -126,7 +126,7 @@ SOFTWARE.
 #define CONTENT 3,1
 #define EVIL_PLAN2 5,1
 #define DISAPOINTMENT 3,2
-#define HATE 5,2
+//#define HATE 5,2
 #define MONDAYS 9,2
 #define OVER_JOY 0,3
 #define OVER_JOY2 2,3
@@ -161,13 +161,13 @@ SOFTWARE.
 class TFT_Extension
 {
 	public:
-				TFT_Extension(UTFT *Disp, UTouch *Touch);
+				TFT_Extension(UTFT *Disp, URTouch *Touch);
 		void	ExtSetup();
 		//========================TOUCH========================
 		bool    TouchButton(int x1, int y1, int x2, int y2);
 		bool    TouchButton_Draw(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
 		bool    Button(int x1, int y1, int x2, int y2, uint8_t buttonNumber, byte TYPE = 0, unsigned long time = 1000);
-		bool 	TextButton(char *str, byte font_size, int x1, int y1, int x2, int y2, word color);
+		bool 	TextButton(const char *str, byte font_size, int x1, int y1, int x2, int y2, word color);
 		bool    LatchButton(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
 		bool    LatchButton_Draw(int x1, int y1, int x2, int y2, uint8_t buttonNumber);
 		bool    TouchCircle(int cx, int cy, int radius);
@@ -209,18 +209,18 @@ class TFT_Extension
 		void	SetLatchButtonColors(uint8_t ButtonNumber, word color1,word color2, bool fill, bool rounded);
 		void	SetLatchCircleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
 		void	SetLatchTriangleColors(uint8_t ButtonNumber, word color1,word color2, bool fill);
-		void	SetTouchButtonText(uint8_t ButtonNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetLatchButtonText(uint8_t ButtonNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetTouchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color);
-		void	SetTouchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
-		void	SetLatchButtonText(uint8_t ButtonNumber, char* txt, bool size, word color);
-		void	SetTouchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
-		void	SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color);
-		void	SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
-		void	SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color);
+		void	SetTouchButtonText(uint8_t ButtonNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetLatchButtonText(uint8_t ButtonNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetTouchCircleText(uint8_t CircleNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetLatchCircleText(uint8_t CircleNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetTouchTriangleText(uint8_t TriangleNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetLatchTriangleText(uint8_t TriangleNumber, const char* txt, const char * nptxt, bool size, word color);
+		void	SetTouchButtonText(uint8_t ButtonNumber, const char* txt, bool size, word color);
+		void	SetLatchButtonText(uint8_t ButtonNumber, const char* txt, bool size, word color);
+		void	SetTouchCircleText(uint8_t CircleNumber, const char* txt, bool size, word color);
+		void	SetLatchCircleText(uint8_t CircleNumber, const char* txt, bool size, word color);
+		void	SetTouchTriangleText(uint8_t TriangleNumber, const char* txt, bool size, word color);
+		void	SetLatchTriangleText(uint8_t TriangleNumber, const char* txt, bool size, word color);
 		void	ResetVertSlider(byte _ID);
 		void	ResetHorSlider(byte _ID);
 		void	ResetTouchButton(byte ID);
@@ -241,8 +241,8 @@ class TFT_Extension
 		void	ResetAllLatchButton();
 		void	ResetAllLatchCircle();
 		void	ResetAllLatchTriangle();
-		void	RB_Text(char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color);
-		void	RCB_Text(char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color);
+		void	RB_Text(const char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color);
+		void	RCB_Text(const char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color);
 		void    RB_Outer_Color(uint8_t ButtonNumber, uint8_t Group, word color);
 		void    RCB_Outer_Color(uint8_t ButtonNumber, uint8_t Group, word color);
 		void 	RB_Toggled_Color(uint8_t ButtonNumber, uint8_t Group, word color);
@@ -274,7 +274,7 @@ class TFT_Extension
 		void	rounded_Square(int cx,int cy,int h, int w, float radius, word color, bool fill);
 		void	smiley_Face(int cx, int cy, int radius, byte eyes, byte mouth);
 		void	HourGlass(int cx, int cy, int height, int time);
-		void	SpeechBubble(char * str, int cx, int cy, float radius, int deg);
+		void	SpeechBubble(const char * str, int cx, int cy, float radius, int deg);
 		void	drawGauge(byte _ID, int cur, int pos_x, int pos_y, int start, int stop, int rad);
 		void	ResetGauge(byte _ID);
 		void	SetupStandardKB();
@@ -288,7 +288,7 @@ class TFT_Extension
 	
 	protected:
 	    UTFT	 *_Disp;
-		UTouch	 *_Touch;		
+		URTouch	 *_Touch;		
 		
 	private:
 		long    Area(long Ax, long Ay, long Bx, long By, long Cx, long Cy);
