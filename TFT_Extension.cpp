@@ -79,7 +79,7 @@ const char Mobile_SymKeys[3][13] PROGMEM ={
 };
 
 struct Radio {
-  char * Text[Button_Groups][Num_Of_Buttons];
+  const char * Text[Button_Groups][Num_Of_Buttons];
   bool TxtEnable[Button_Groups][Num_Of_Buttons];
   bool Font_Size[Button_Groups][Num_Of_Buttons];
   bool Button[Button_Groups][Num_Of_Buttons];
@@ -88,8 +88,8 @@ struct Radio {
 } Block, Circle;
 
 struct TouchButtons{
-  char * PText[Num_Of_Buttons];
-  char * NPText[Num_Of_Buttons];
+  const char * PText[Num_Of_Buttons];
+  const char * NPText[Num_Of_Buttons];
   bool TxtEnable[Num_Of_Buttons];
   bool Font_Size[Num_Of_Buttons];
   byte Button[Num_Of_Buttons];
@@ -154,7 +154,7 @@ struct {
   int y2;
 }SEND,BSP,CAPS, SPACE, NUM;
 
-TFT_Extension::TFT_Extension(UTFT *Disp, UTouch *Touch)
+TFT_Extension::TFT_Extension(UTFT *Disp, URTouch *Touch)
 { 
  _Disp = Disp;
  _Touch = Touch;
@@ -167,9 +167,7 @@ void TFT_Extension::ExtSetup()
   C_Touched = false, C_timeout = false;
   T_Touched = false, T_timeout = false;
   ButLOCK = false;
-  Butlocked[Button_Groups];
   CirLOCK = false;
-  Cirlocked[Button_Groups];
   B_lastx1 =0, B_lasty1 =0, B_lastx2 =0, B_lasty2 =0;
   C_lastcx =0, C_lastcy =0;
 
@@ -178,9 +176,8 @@ void TFT_Extension::ExtSetup()
   T = 0;
   
   idx = 0;
-  MSG[BUF];
   gotFirst = false;
-  Shift = false, capsLock = false, lastState;
+  Shift = false, capsLock = false;
   for(byte idx = 0; idx < 10; idx++)
   {
     VSliders[idx].Slide = 0; HSliders[idx].Slide = 0;
@@ -1017,7 +1014,7 @@ bool TFT_Extension::TriangleButton(int x1,int y1,int base, int deg, uint8_t tria
 }
 
 // THIS IS STILL BEING ADDED TO
-bool TFT_Extension::TextButton(char *str, byte font_size, int x1, int y1, int x2, int y2, word color)
+bool TFT_Extension::TextButton(const char *str, byte font_size, int x1, int y1, int x2, int y2, word color)
 {
   int strl = strlen(str); // get the length of the string
   int Xpos = (x2 + x1)/2; // find the center of the button
@@ -1950,7 +1947,7 @@ void TFT_Extension::SetLatchTriangleColors(uint8_t ButtonNumber, word color1, wo
   L_Triangle.Fill[ButtonNumber] = fill;
 }
 
-void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,char* txt, char* nptxt, bool size, word color)
+void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,const char* txt, const char* nptxt, bool size, word color)
 {
   T_Button.PText[ButtonNumber] = txt;
   T_Button.NPText[ButtonNumber] = nptxt;
@@ -1960,12 +1957,12 @@ void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,char* txt, char* npt
   ButtonColor1[ButtonNumber].buttons.text.rgb = color;
 }
 
-void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,char* txt, bool size, word color)
+void TFT_Extension::SetTouchButtonText(uint8_t ButtonNumber,const char* txt, bool size, word color)
 {
   SetTouchButtonText(ButtonNumber, txt, txt, size, color);
 }
 
-void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, char* nptxt, bool size, word color)
+void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,const char * txt, const char* nptxt, bool size, word color)
 {
   L_Button.PText[ButtonNumber] = txt;
   L_Button.NPText[ButtonNumber] = nptxt;
@@ -1975,12 +1972,12 @@ void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, char* np
   ButtonColor1[ButtonNumber].latches.text.rgb = color;
 }
 
-void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,char * txt, bool size, word color)
+void TFT_Extension::SetLatchButtonText(uint8_t ButtonNumber,const char * txt, bool size, word color)
 {
   SetLatchButtonText( ButtonNumber, txt, txt, size, color);
 }
 
-void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color)
+void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, const char* txt, const char * nptxt, bool size, word color)
 {
   T_Circle.PText[CircleNumber] = txt;
   T_Circle.NPText[CircleNumber] = nptxt;
@@ -1990,12 +1987,12 @@ void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, char * n
   CircleColor1[CircleNumber].buttons.text.rgb = color;
 }
 
-void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, char* txt, bool size, word color)
+void TFT_Extension::SetTouchCircleText(uint8_t CircleNumber, const char* txt, bool size, word color)
 {
   SetTouchCircleText(CircleNumber, txt, txt, size, color);
 }
 
-void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, char * nptxt, bool size, word color)
+void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, const char* txt, const char * nptxt, bool size, word color)
 {
   L_Circle.PText[CircleNumber] = txt;
   L_Circle.NPText[CircleNumber] = nptxt;
@@ -2005,12 +2002,12 @@ void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, char * n
   CircleColor1[CircleNumber].latches.text.rgb = color;
 }
 
-void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, char* txt, bool size, word color)
+void TFT_Extension::SetLatchCircleText(uint8_t CircleNumber, const char* txt, bool size, word color)
 {
   SetLatchCircleText(CircleNumber, txt, txt, size, color);
 }
 
-void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char * nptxt, bool size, word color)
+void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, const char* txt, const char * nptxt, bool size, word color)
 {
   T_Triangle.PText[TriangleNumber] = txt;
   T_Triangle.NPText[TriangleNumber] = nptxt;
@@ -2020,12 +2017,12 @@ void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, char
   TriangleColor1[TriangleNumber].buttons.text.rgb = color;
 }
 
-void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color)
+void TFT_Extension::SetTouchTriangleText(uint8_t TriangleNumber, const char* txt, bool size, word color)
 {
   SetTouchTriangleText(TriangleNumber, txt, txt, size, color);
 }
 
-void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char* nptxt, bool size, word color)
+void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, const char* txt, const char* nptxt, bool size, word color)
 {
   L_Triangle.PText[TriangleNumber] = txt;
   L_Triangle.NPText[TriangleNumber] = nptxt;
@@ -2035,7 +2032,7 @@ void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, char
   TriangleColor1[TriangleNumber].latches.text.rgb = color;
 }
 
-void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, char* txt, bool size, word color)
+void TFT_Extension::SetLatchTriangleText(uint8_t TriangleNumber, const char* txt, bool size, word color)
 {
   SetLatchTriangleText(TriangleNumber, txt, txt, size, color);
 }
@@ -2140,7 +2137,7 @@ void TFT_Extension::ResetAllLatchTriangle()
 }
 
 // This function allows text to be entered into the radio button
-void TFT_Extension::RB_Text(char * text, bool size, uint8_t ButtonNumber,uint8_t Group, word color)
+void TFT_Extension::RB_Text(const char * text, bool size, uint8_t ButtonNumber,uint8_t Group, word color)
 {
   Block.Text[ButtonNumber][Group] = text;
   Block.Font_Size[ButtonNumber][Group] = size;
@@ -2150,7 +2147,7 @@ void TFT_Extension::RB_Text(char * text, bool size, uint8_t ButtonNumber,uint8_t
 }
 
 // This function allows text to be entered into the radio circle button
-void TFT_Extension::RCB_Text(char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color)
+void TFT_Extension::RCB_Text(const char * text, bool size, uint8_t ButtonNumber, uint8_t Group, word color)
 {
   Circle.Text[ButtonNumber][Group] = text;
   Circle.Font_Size[ButtonNumber][Group] = size;
@@ -2641,6 +2638,7 @@ void TFT_Extension::drawOvalArc(int cx, int cy, int Xradius, int Yradius, int Xt
   _Disp->drawLine(cx,cy, XL,YL); // =======================================
 }
 
+#if(0)
 void TFT_Extension::drawMoon(int cx, int cy, int radius, uint8_t phase)
 {
   byte C = 0, N;
@@ -2692,7 +2690,7 @@ void TFT_Extension::drawMoon(int cx, int cy, int radius, uint8_t phase)
     }
   }
 }
-
+#endif
 void TFT_Extension::rounded_Square(int cx, int cy, int h, int w, float radius, word color, bool fill)
 { 
   byte angle;
@@ -2901,7 +2899,7 @@ void TFT_Extension::HourGlass(int cx, int cy, int height, int time)
   }
 }
 
-void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int deg)
+void TFT_Extension::SpeechBubble(const char * str, int cx, int cy, float radius, int deg)
 {
   Save_MainColor;
   float start, stop;
@@ -2995,7 +2993,7 @@ void TFT_Extension::SpeechBubble(char * str, int cx, int cy, float radius, int d
   if(strl <= MidTxt)
     _Disp->print(str, cx - (strl*4), cy - 6, 0);
   else 
-    _Disp->print("TTL", cx - (3*4), cy - 6, 0); // TTL = Text Too Long
+    _Disp->print((char*)"TTL", cx - (3*4), cy - 6, 0); // TTL = Text Too Long
   //}
 //}
   Restore_MainColor;
@@ -3065,7 +3063,7 @@ void TFT_Extension::SetupStandardKB()
 	_Disp->fillRect(0,YoffSet,_Disp->getDisplayXSize() - 1, _Disp->getDisplayYSize() - 1);
     _Disp->setColor(0xFFFF);
     _Disp->setFont(SmallFont);	
-    _Disp->print(">>",0, YoffSet-TxtoffSet);
+    _Disp->print((char*)">>",0, YoffSet-TxtoffSet);
 	
 	makeKeyboard();
 	
@@ -3127,7 +3125,7 @@ void TFT_Extension::SetupMobileKB(int X, int Y, float SX, float SY)
 	_Disp->fillRect(0,YoffSet,_Disp->getDisplayXSize() - 1, _Disp->getDisplayYSize() - 1);
     _Disp->setColor(0xFFFF);
     _Disp->setFont(SmallFont);	
-    _Disp->print(">>",XoffSet - 18, YoffSet-TxtoffSet);
+    _Disp->print((char*)">>",XoffSet - 18, YoffSet-TxtoffSet);
 	
     make_Mobile_Keyboard();
     clearMSG();
@@ -3152,7 +3150,7 @@ void TFT_Extension::makeKeyboard()
         _Disp->drawLine(XoffSet + 15*(col-3)+ (15*pgm_read_byte(&(KB[row][0])) + (col!=3? -3:0)), YoffSet + 14*row, XoffSet + 15*(col-3)+ (15*pgm_read_byte(&(KB[row][0])) + (col!=3? -3:0)),YoffSet + (14*row) + 14);
     }
   }
-  _Disp->print("LS", XoffSet+10, YoffSet + 14*3);
+  _Disp->print((char*)"LS", XoffSet+10, YoffSet + 14*3);
   _Disp->drawRect(SEND.x1, SEND.y1, SEND.x2, SEND.y2);
   _Disp->drawRect(BSP.x1, BSP.y1, BSP.x2, BSP.y2);
    TextButton("CAPS",_FONT, CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2,  WHITE);
@@ -3183,15 +3181,15 @@ void TFT_Extension::make_Mobile_Keyboard()
   _Disp->fillRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
   _Disp->setColor(WHITE);
   _Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
-  _Disp->print("^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(SEND.x1, SEND.y1, SEND.x2, SEND.y2);
-  _Disp->print("RTRN", ((SEND.x1 + SEND.x2)/2) - (_FONT? 8:4)*4, ((SEND.y1 + SEND.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"RTRN", ((SEND.x1 + SEND.x2)/2) - (_FONT? 8:4)*4, ((SEND.y1 + SEND.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(BSP.x1, BSP.y1, BSP.x2, BSP.y2);
-  _Disp->print("BSP", ((BSP.x1 + BSP.x2)/2) - (_FONT? 8:4)*3, ((BSP.y1 + BSP.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"BSP", ((BSP.x1 + BSP.x2)/2) - (_FONT? 8:4)*3, ((BSP.y1 + BSP.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(SPACE.x1, SPACE.y1, SPACE.x2, SPACE.y2); // spacebar
-  _Disp->print("SPACE", ((SPACE.x1 + SPACE.x2)/2) - (_FONT? 8:4)*5, ((SPACE.y1 + SPACE.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"SPACE", ((SPACE.x1 + SPACE.x2)/2) - (_FONT? 8:4)*5, ((SPACE.y1 + SPACE.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(NUM.x1, NUM.y1, NUM.x2, NUM.y2); //numKeys
-  _Disp->print("123", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"123", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
   
   Restore_MainColor;
 }
@@ -3238,9 +3236,9 @@ void TFT_Extension::makeNumberKeys()
     }
   }
   _Disp->drawRoundRect(NUM.x1, NUM.y1, NUM.x2, NUM.y2); //numKeys
-  _Disp->print("ABC", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"ABC", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2);
-  _Disp->print("#", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"#", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
 }
 
 void TFT_Extension::makeSymbolKeys()
@@ -3268,9 +3266,9 @@ void TFT_Extension::makeSymbolKeys()
     }
   }
   _Disp->drawRoundRect(CAPS.x1, CAPS.y1,NUM.x2,CAPS.y2); //numKeys
-  _Disp->print("123", ((CAPS.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"123", ((CAPS.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
   _Disp->drawRoundRect(NUM.x1, NUM.y1, NUM.x2, NUM.y2); //numKeys
-  _Disp->print("ABC", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
+  _Disp->print((char*)"ABC", ((NUM.x1 + NUM.x2)/2) - (_FONT? 8:4)*3, ((NUM.y1 + NUM.y2)/2) - (_FONT? 8:4));
   //_Disp->print("#", ((CAPS.x1 + CAPS.x2)/2) - 7, ((CAPS.y1 + CAPS.y2)/2) - 8);
 }
 
@@ -3379,7 +3377,7 @@ char* TFT_Extension::Standard_KeyBoard(word color)
     _Disp->print(MSG, 20, YoffSet - TxtoffSet);
   }
 
-  if(capsLock =  LatchButton_Draw(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2, 0))
+  if((capsLock =  LatchButton_Draw(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2, 0)))
   {
     if(capsLock != lastState)
       makeCapsKeys();
@@ -3427,7 +3425,7 @@ char* TFT_Extension::Mobile_KeyBoard(word color)
 	      _Disp->fillRoundRect(CAPS.x1, CAPS.y1, CAPS.x2, CAPS.y2); // shift key
 		  _Disp->setColor(BLACK);
 		  _Disp->setBackColor(WHITE);
-          _Disp->print("^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
+          _Disp->print((char*)"^", ((CAPS.x1 + CAPS.x2)/2) - (_FONT? 8:4), ((CAPS.y1 + CAPS.y2)/2) - (_FONT? 8:4));
           Shift = true;
           //makeShiftKeys();
           _Disp->setColor(WHITE);
